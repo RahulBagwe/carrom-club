@@ -1,0 +1,16 @@
+{
+  "name": "Carrom Club — Official ICF & Online 1v1",
+  "short_name": "Carrom Club",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1c1917",
+  "theme_color": "#1c1917",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

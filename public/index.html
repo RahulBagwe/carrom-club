@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1c1917" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <title>Carrom Board v2 — ICF, Freestyle &amp; Trick Shots</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #1c1917;
+      color: #f5f5f4;
+      overscroll-behavior: none;
+    }
+    canvas {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    input[type="range"] {
+      accent-color: #d97706;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-5">
+  <div class="w-full max-w-xl flex flex-col items-center gap-2.5">
+    <!-- Header -->
+    <header class="w-full flex flex-wrap items-center justify-between gap-2 px-1">
+      <div>
+        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-amber-100">
+          Carrom Board
+          <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 ml-1">v2</span>
+        </h1>
+        <p id="matchMeta" class="text-xs text-stone-400">Game 1/3 · Board 1/8 · First to 25 pts</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+        <button id="rulesetBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-900/60 hover:bg-emerald-800/70 border border-emerald-500/50 text-emerald-200 transition">
+          Ruleset: ICF Official
+        </button>
+        <button id="modeBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-amber-500/50 text-amber-200 transition">
+          Mode: vs Bot
+        </button>
+        <button id="diffBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+          Bot: Normal
+        </button>
+        <button id="themeBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+          Theme: Wood
+        </button>
+        <button id="piecesBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+          Pieces: Classic
+        </button>
+        <button id="strikerBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+          Striker: Amber
+        </button>
+        <button id="onlineBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-sky-900/60 hover:bg-sky-800/70 border border-sky-500/50 text-sky-200 transition">
+          Online 1v1
+        </button>
+        <button id="rulesBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+          Rules
+        </button>
+        <button id="soundBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+          Sound: On
+        </button>
+        <button id="resetBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-600 hover:bg-amber-500 text-white transition">
+          Reset Rack
+        </button>
+      </div>
+    </header>
+
+    <!-- Scoreboard -->
+    <div class="w-full max-w-[540px] grid grid-cols-3 gap-2">
+      <div id="p1Card" class="rounded-xl p-2.5 border transition bg-stone-900 border-amber-500/70">
+        <div class="flex items-center justify-between">
+          <span id="p1Label" class="text-xs font-semibold text-amber-100">P1 · White</span>
+          <span id="p1ColorDot" class="w-3 h-3 rounded-full bg-[#faf3e0] border border-stone-400 inline-block"></span>
+        </div>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span id="p1Score" class="text-base font-bold text-white">0 / 9</span>
+          <span id="p1Points" class="text-xs text-amber-300 font-semibold">0 pts</span>
+        </div>
+        <div id="p1Tray" class="flex flex-wrap gap-1 mt-1 min-h-[10px]"></div>
+        <div class="flex items-center justify-between mt-1 text-[10px] text-stone-400">
+          <span id="p1Due">Due: 0</span>
+          <span id="p1Wins">Matches: 0</span>
+        </div>
+      </div>
+
+      <div class="rounded-xl p-2.5 border border-stone-800 bg-stone-900/80 flex flex-col items-center justify-center text-center">
+        <span id="centerLabel" class="text-[10px] uppercase tracking-wider text-stone-400">Queen</span>
+        <span id="queenStatus" class="text-xs font-semibold text-rose-400 mt-0.5">On Board</span>
+        <span id="gamesScore" class="text-[11px] font-medium text-stone-300 mt-1">Games: 0 - 0</span>
+      </div>
+
+      <div id="p2Card" class="rounded-xl p-2.5 border transition bg-stone-900/60 border-stone-800">
+        <div class="flex items-center justify-between">
+          <span id="p2Label" class="text-xs font-semibold text-stone-200">Bot · Black</span>
+          <span id="p2ColorDot" class="w-3 h-3 rounded-full bg-stone-800 border border-stone-500 inline-block"></span>
+        </div>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span id="p2Score" class="text-base font-bold text-white">0 / 9</span>
+          <span id="p2Points" class="text-xs text-amber-300 font-semibold">0 pts</span>
+        </div>
+        <div id="p2Tray" class="flex flex-wrap gap-1 mt-1 min-h-[10px]"></div>
+        <div class="flex items-center justify-between mt-1 text-[10px] text-stone-400">
+          <span id="p2Due">Due: 0</span>
+          <span id="p2Wins">Matches: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Board Container -->
+    <div id="boardWrap" class="w-full aspect-square max-w-[540px] rounded-2xl shadow-2xl overflow-hidden bg-stone-900 border border-stone-700/70 flex items-center justify-center">
+      <canvas id="carromCanvas" class="w-full h-full block"></canvas>
+    </div>
+
+    <!-- Controls & Status -->
+    <div class="w-full max-w-[540px] bg-stone-900/90 border border-stone-800 rounded-xl p-3 flex flex-col gap-2.5">
+      <div class="flex items-center gap-3">
+        <label for="strikerSlider" class="text-xs font-medium text-stone-300 whitespace-nowrap">Striker Position</label>
+        <input id="strikerSlider" type="range" min="-1" max="1" step="0.01" value="0" class="w-full h-2 rounded-lg cursor-pointer" />
+      </div>
+      <div class="flex items-center justify-between gap-2 text-xs text-stone-400">
+        <span id="statusText" class="leading-snug">Player 1 breaks (White) — slide to position, pull back to shoot!</span>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="foregoDueBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-stone-700 hover:bg-stone-600 text-amber-200 transition">
+            Forego Due
+          </button>
+          <button id="nextBoardBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition">
+            Next Board
+          </button>
+          <span id="pocketCount" class="font-medium text-amber-300 whitespace-nowrap">Pocketed: 0 / 19</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Official ICF & Game Modes Modal -->
+  <div id="rulesModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 p-4">
+    <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-stone-900 border border-stone-700 p-5 shadow-2xl text-stone-200">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-bold text-amber-100">Carrom Rules &amp; Modes</h2>
+        <button id="closeRulesBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 text-stone-300">
+          Close
+        </button>
+      </div>
+      <div class="space-y-2.5 text-xs leading-relaxed text-stone-300">
+        <p><strong class="text-emerald-300">Game Modes (Ruleset):</strong><br />
+          • <strong>ICF Official:</strong> Full 25-point / 8-board / Best-of-3 match rules, alternating break, 22-pt Queen cutoff, and interactive Due placement.<br />
+          • <strong>Quick 1-Board:</strong> Single-board match—first to clear all 9 coins (with Queen settled) wins immediately.<br />
+          • <strong>Freestyle:</strong> Arcade Carrom! White = 10 pts, Black = 20 pts, Queen = 50 pts (must cover with any coin). First to 160 pts or board clear wins.<br />
+          • <strong>Trick Shots:</strong> 6 solo puzzle challenges—clear the target coins within the shot limit!
+        </p>
+        <p><strong class="text-amber-300">Break &amp; Placement:</strong> In ICF &amp; Quick modes, whoever breaks plays White (White Y points at them). The striker cannot overlap any coin on the baseline and must either cover a red Base Circle completely or stay clear.</p>
+        <p><strong class="text-amber-300">Dues &amp; Queen:</strong> Pocketing the striker incurs 1 Due. In ICF/Quick, you must pocket 1 own coin before claiming the Queen, cover her on the same or next stroke, and never clear your last coin while the Queen is still on the board.</p>
+        <p><strong class="text-amber-300">Controls:</strong> Touch/Mouse drag-back on the striker, or Keyboard (<kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">←</kbd><kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">→</kbd> slide, <kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">A</kbd><kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">D</kbd> aim, <kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">↑</kbd><kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">↓</kbd> power, <kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">Space</kbd> shoot).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online 1v1 Room Modal -->
+  <div id="onlineModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 p-4">
+    <div class="w-full max-w-sm rounded-2xl bg-stone-900 border border-stone-700 p-5 shadow-2xl text-stone-200">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-bold text-sky-200">Play Online (1v1 Room)</h2>
+        <button id="closeOnlineBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-stone-800 hover:bg-stone-700 text-stone-300">
+          Close
+        </button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <p id="onlineStatus" class="text-stone-300 bg-stone-800/80 border border-stone-700 rounded-lg p-2.5">
+          Create a private room and share the invite link with a friend, or enter their 6-character code.
+        </p>
+        <div class="flex gap-2">
+          <button id="createRoomBtn" type="button" class="flex-1 px-3 py-2 rounded-lg font-semibold bg-sky-600 hover:bg-sky-500 text-white transition">
+            Create Room
+          </button>
+          <button id="copyInviteBtn" type="button" class="hidden px-3 py-2 rounded-lg font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition">
+            Copy Link
+          </button>
+        </div>
+        <div class="flex gap-2">
+          <input id="roomCodeInput" type="text" maxlength="6" placeholder="Room code (e.g. A7K9P2)" class="flex-1 px-3 py-2 rounded-lg bg-stone-800 border border-stone-700 text-white uppercase tracking-wider outline-none focus:border-sky-500" />
+          <button id="joinRoomBtn" type="button" class="px-3 py-2 rounded-lg font-semibold bg-stone-700 hover:bg-stone-600 text-white transition">
+            Join
+          </button>
+        </div>
+        <button id="leaveRoomBtn" type="button" class="hidden w-full px-3 py-2 rounded-lg font-semibold bg-rose-700/80 hover:bg-rose-600 text-white transition">
+          Leave Online Room
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('carromCanvas');
+      const ctx = canvas.getContext('2d');
+      const boardWrap = document.getElementById('boardWrap');
+      const strikerSlider = document.getElementById('strikerSlider');
+      const resetBtn = document.getElementById('resetBtn');
+      const soundBtn = document.getElementById('soundBtn');
+      const rulesetBtn = document.getElementById('rulesetBtn');
+      const modeBtn = document.getElementById('modeBtn');
+      const diffBtn = document.getElementById('diffBtn');
+      const themeBtn = document.getElementById('themeBtn');
+      const piecesBtn = document.getElementById('piecesBtn');
+      const strikerBtn = document.getElementById('strikerBtn');
+      const rulesBtn = document.getElementById('rulesBtn');
+      const onlineBtn = document.getElementById('onlineBtn');
+      const onlineModal = document.getElementById('onlineModal');
+      const closeOnlineBtn = document.getElementById('closeOnlineBtn');
+      const onlineStatusEl = document.getElementById('onlineStatus');
+      const createRoomBtn = document.getElementById('createRoomBtn');
+      const joinRoomBtn = document.getElementById('joinRoomBtn');
+      const copyInviteBtn = document.getElementById('copyInviteBtn');
+      const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+      const roomCodeInput = document.getElementById('roomCodeInput');
+      const closeRulesBtn = document.getElementById('closeRulesBtn');
+      const rulesModal = document.getElementById('rulesModal');
+      const nextBoardBtn = document.getElementById('nextBoardBtn');
+      const foregoDueBtn = document.getElementById('foregoDueBtn');
+      const statusText = document.getElementById('statusText');
+      const matchMeta = document.getElementById('matchMeta');
+      const pocketCountEl = document.getElementById('pocketCount');
+      const p1Card = document.getElementById('p1Card');
+      const p2Card = document.getElementById('p2Card');
+      const p1Label = document.getElementById('p1Label');
+      const p2Label = document.getElementById('p2Label');
+      const p1ColorDot = document.getElementById('p1ColorDot');
+      const p2ColorDot = document.getElementById('p2ColorDot');
+      const p1ScoreEl = document.getElementById('p1Score');
+      const p2ScoreEl = document.getElementById('p2Score');
+      const p1PointsEl = document.getElementById('p1Points');
+      const p2PointsEl = document.getElementById('p2Points');
+      const p1TrayEl = document.getElementById('p1Tray');
+      const p2TrayEl = document.getElementById('p2Tray');
+      const p1DueEl = document.getElementById('p1Due');
+      const p2DueEl = document.getElementById('p2Due');
+      const p1WinsEl = document.getElementById('p1Wins');
+      const p2WinsEl = document.getElementById('p2Wins');
+      const centerLabel = document.getElementById('centerLabel');
+      const queenStatusEl = document.getElementById('queenStatus');
+      const gamesScoreEl = document.getElementById('gamesScore');
+
+      const BOARD_SIZE = 800;
+      const FRAME = 44;
+      const PLAY_MIN = FRAME;
+      const PLAY_MAX = BOARD_SIZE - FRAME;
+      const PLAY_SIZE = PLAY_MAX - PLAY_MIN;
+      const CENTER = BOARD_SIZE / 2;
+      const OUTER_CIRCLE_R = 84;
+      const CENTRE_CIRCLE_R = 21;
+
+      const POCKET_RADIUS = 26;
+      const POCKET_OFFSET = FRAME + 22;
+      const POCKETS = [
+        { x: POCKET_OFFSET, y: POCKET_OFFSET },
+        { x: BOARD_SIZE - POCKET_OFFSET, y: POCKET_OFFSET },
+        { x: POCKET_OFFSET, y: BOARD_SIZE - POCKET_OFFSET },
+        { x: BOARD_SIZE - POCKET_OFFSET, y: BOARD_SIZE - POCKET_OFFSET }
+      ];
+
+      const BOTTOM_BASELINE_Y = BOARD_SIZE - FRAME - 96;
+      const TOP_BASELINE_Y = FRAME + 96;
+      const BASELINE_HALF = 205;
+      const COIN_R = 16;
+      const STRIKER_R = 22;
+
+      const FIXED_DT = 1 / 240;
+      const VISCOUS_DRAG = 0.42;
+      const KINETIC_FRICTION = 240;
+      const STOP_SPEED = 10;
+      const MAX_PULL = 145;
+      const SHOT_POWER = 8.5;
+
+      const THEMES = {
+        wood: {
+          label: 'Birch Wood', texture: 'wood',
+          frameOuter: '#2d150c', frameMid: '#4e2718', frameInner: '#361a0f',
+          bevelLight: 'rgba(255, 224, 185, 0.16)', bevelDark: 'rgba(0, 0, 0, 0.45)',
+          surfaceInner: '#f6e1b8', surfaceMid: '#edd09b', surfaceOuter: '#dfb877',
+          grainColor: 'rgba(139, 90, 43, 0.085)', circle: '#7f1d1d', circleFill: 'rgba(153, 27, 27, 0.14)',
+          mandala: 'rgba(127, 29, 29, 0.18)', foulLine: 'rgba(45, 25, 14, 0.6)',
+          baselineActive: '#9a3412', baselineIdle: 'rgba(43, 26, 18, 0.45)', baseCircleFill: '#b91c1c',
+          pocket: '#0c0907', pocketRim: '#28140b'
+        },
+        rosewood: {
+          label: 'Rosewood', texture: 'wood',
+          frameOuter: '#1c0a06', frameMid: '#3a1810', frameInner: '#240e09',
+          bevelLight: 'rgba(254, 215, 170, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.5)',
+          surfaceInner: '#e7c697', surfaceMid: '#d6ad78', surfaceOuter: '#be8e54',
+          grainColor: 'rgba(92, 46, 20, 0.1)', circle: '#7c2d12', circleFill: 'rgba(124, 45, 18, 0.15)',
+          mandala: 'rgba(124, 45, 18, 0.2)', foulLine: 'rgba(56, 28, 14, 0.6)',
+          baselineActive: '#b45309', baselineIdle: 'rgba(56, 28, 14, 0.45)', baseCircleFill: '#b91c1c',
+          pocket: '#090504', pocketRim: '#240e09'
+        },
+        bamboo: {
+          label: 'Bamboo', texture: 'wood',
+          frameOuter: '#36270e', frameMid: '#594218', frameInner: '#423011',
+          bevelLight: 'rgba(254, 240, 138, 0.18)', bevelDark: 'rgba(0, 0, 0, 0.42)',
+          surfaceInner: '#fef3c7', surfaceMid: '#f7e199', surfaceOuter: '#e6c66a',
+          grainColor: 'rgba(146, 108, 30, 0.08)', circle: '#92400e', circleFill: 'rgba(146, 64, 14, 0.12)',
+          mandala: 'rgba(146, 64, 14, 0.18)', foulLine: 'rgba(92, 64, 16, 0.55)',
+          baselineActive: '#b45309', baselineIdle: 'rgba(92, 64, 16, 0.4)', baseCircleFill: '#dc2626',
+          pocket: '#0d0904', pocketRim: '#36270e'
+        },
+        walnut: {
+          label: 'Walnut', texture: 'wood',
+          frameOuter: '#17110d', frameMid: '#2e221b', frameInner: '#1f1712',
+          bevelLight: 'rgba(214, 211, 209, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.55)',
+          surfaceInner: '#bfa07a', surfaceMid: '#a98760', surfaceOuter: '#8c6b46',
+          grainColor: 'rgba(55, 38, 22, 0.12)', circle: '#fef3c7', circleFill: 'rgba(254, 243, 199, 0.12)',
+          mandala: 'rgba(254, 243, 199, 0.18)', foulLine: 'rgba(254, 243, 199, 0.45)',
+          baselineActive: '#f59e0b', baselineIdle: 'rgba(254, 243, 199, 0.35)', baseCircleFill: '#dc2626',
+          pocket: '#070504', pocketRim: '#1f1712'
+        },
+        mahogany: {
+          label: 'Mahogany', texture: 'wood',
+          frameOuter: '#220808', frameMid: '#451212', frameInner: '#2e0b0b',
+          bevelLight: 'rgba(254, 202, 202, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.5)',
+          surfaceInner: '#e6b89c', surfaceMid: '#d49d7e', surfaceOuter: '#b87a58',
+          grainColor: 'rgba(102, 34, 24, 0.1)', circle: '#7f1d1d', circleFill: 'rgba(127, 29, 29, 0.15)',
+          mandala: 'rgba(127, 29, 29, 0.2)', foulLine: 'rgba(69, 18, 18, 0.58)',
+          baselineActive: '#991b1b', baselineIdle: 'rgba(69, 18, 18, 0.42)', baseCircleFill: '#b91c1c',
+          pocket: '#090303', pocketRim: '#2e0b0b'
+        },
+        emerald: {
+          label: 'Emerald', texture: 'felt',
+          frameOuter: '#141a18', frameMid: '#26332e', frameInner: '#18211e',
+          bevelLight: 'rgba(209, 250, 229, 0.12)', bevelDark: 'rgba(0, 0, 0, 0.5)',
+          surfaceInner: '#188843', surfaceMid: '#157439', surfaceOuter: '#0f562b',
+          grainColor: 'rgba(255, 255, 255, 0.045)', circle: '#fde68a', circleFill: 'rgba(253, 230, 138, 0.14)',
+          mandala: 'rgba(253, 230, 138, 0.22)', foulLine: 'rgba(255, 255, 255, 0.45)',
+          baselineActive: '#fbbf24', baselineIdle: 'rgba(255, 255, 255, 0.35)', baseCircleFill: '#dc2626',
+          pocket: '#050806', pocketRim: '#1f2924'
+        },
+        forest: {
+          label: 'Pine Felt', texture: 'felt',
+          frameOuter: '#111912', frameMid: '#223324', frameInner: '#162117',
+          bevelLight: 'rgba(187, 247, 208, 0.12)', bevelDark: 'rgba(0, 0, 0, 0.52)',
+          surfaceInner: '#2e5c38', surfaceMid: '#244b2d', surfaceOuter: '#193620',
+          grainColor: 'rgba(255, 255, 255, 0.04)', circle: '#fef08a', circleFill: 'rgba(254, 240, 138, 0.12)',
+          mandala: 'rgba(254, 240, 138, 0.18)', foulLine: 'rgba(220, 252, 231, 0.42)',
+          baselineActive: '#f59e0b', baselineIdle: 'rgba(220, 252, 231, 0.32)', baseCircleFill: '#ef4444',
+          pocket: '#040805', pocketRim: '#162117'
+        },
+        midnight: {
+          label: 'Midnight', texture: 'slate',
+          frameOuter: '#090d16', frameMid: '#1e293b', frameInner: '#0f172a',
+          bevelLight: 'rgba(148, 163, 184, 0.16)', bevelDark: 'rgba(0, 0, 0, 0.6)',
+          surfaceInner: '#3b4a62', surfaceMid: '#2c394e', surfaceOuter: '#1c2638',
+          grainColor: 'rgba(226, 232, 240, 0.05)', circle: '#38bdf8', circleFill: 'rgba(56, 189, 248, 0.14)',
+          mandala: 'rgba(56, 189, 248, 0.2)', foulLine: 'rgba(186, 230, 253, 0.42)',
+          baselineActive: '#f59e0b', baselineIdle: 'rgba(148, 163, 184, 0.4)', baseCircleFill: '#e11d48',
+          pocket: '#02040a', pocketRim: '#1e293b'
+        },
+        ocean: {
+          label: 'Deep Ocean', texture: 'felt',
+          frameOuter: '#081826', frameMid: '#102e47', frameInner: '#0b2033',
+          bevelLight: 'rgba(125, 211, 252, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.55)',
+          surfaceInner: '#0e6088', surfaceMid: '#0b4e6f', surfaceOuter: '#073952',
+          grainColor: 'rgba(224, 242, 254, 0.045)', circle: '#bae6fd', circleFill: 'rgba(186, 230, 253, 0.14)',
+          mandala: 'rgba(186, 230, 253, 0.2)', foulLine: 'rgba(224, 242, 254, 0.45)',
+          baselineActive: '#fbbf24', baselineIdle: 'rgba(224, 242, 254, 0.35)', baseCircleFill: '#f43f5e',
+          pocket: '#02080d', pocketRim: '#0b2033'
+        },
+        burgundy: {
+          label: 'Burgundy', texture: 'felt',
+          frameOuter: '#1f090e', frameMid: '#3d121d', frameInner: '#290c13',
+          bevelLight: 'rgba(254, 205, 211, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.55)',
+          surfaceInner: '#7f1d32', surfaceMid: '#681527', surfaceOuter: '#4c0d1b',
+          grainColor: 'rgba(255, 228, 230, 0.045)', circle: '#fde68a', circleFill: 'rgba(253, 230, 138, 0.14)',
+          mandala: 'rgba(253, 230, 138, 0.2)', foulLine: 'rgba(254, 243, 199, 0.45)',
+          baselineActive: '#fbbf24', baselineIdle: 'rgba(254, 243, 199, 0.35)', baseCircleFill: '#ef4444',
+          pocket: '#0a0204', pocketRim: '#290c13'
+        },
+        sandstone: {
+          label: 'Sandstone', texture: 'slate',
+          frameOuter: '#33261b', frameMid: '#543f2d', frameInner: '#3d2e21',
+          bevelLight: 'rgba(255, 237, 213, 0.16)', bevelDark: 'rgba(0, 0, 0, 0.42)',
+          surfaceInner: '#f5e6d3', surfaceMid: '#e6cfb3', surfaceOuter: '#d1b18c',
+          grainColor: 'rgba(120, 80, 40, 0.06)', circle: '#9a3412', circleFill: 'rgba(154, 52, 18, 0.12)',
+          mandala: 'rgba(154, 52, 18, 0.18)', foulLine: 'rgba(84, 56, 32, 0.55)',
+          baselineActive: '#c2410c', baselineIdle: 'rgba(84, 56, 32, 0.4)', baseCircleFill: '#dc2626',
+          pocket: '#0c0805', pocketRim: '#3d2e21'
+        },
+        obsidian: {
+          label: 'Obsidian', texture: 'slate',
+          frameOuter: '#09090b', frameMid: '#27272a', frameInner: '#18181b',
+          bevelLight: 'rgba(244, 244, 245, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.7)',
+          surfaceInner: '#27272a', surfaceMid: '#1c1c20', surfaceOuter: '#121215',
+          grainColor: 'rgba(255, 255, 255, 0.04)', circle: '#f59e0b', circleFill: 'rgba(245, 158, 11, 0.14)',
+          mandala: 'rgba(245, 158, 11, 0.2)', foulLine: 'rgba(212, 212, 216, 0.4)',
+          baselineActive: '#fbbf24', baselineIdle: 'rgba(161, 161, 170, 0.35)', baseCircleFill: '#e11d48',
+          pocket: '#000000', pocketRim: '#18181b'
+        },
+        cherry: {
+          label: 'Cherry Wood', texture: 'wood',
+          frameOuter: '#2e100a', frameMid: '#592014', frameInner: '#3d150d',
+          bevelLight: 'rgba(254, 215, 170, 0.16)', bevelDark: 'rgba(0, 0, 0, 0.46)',
+          surfaceInner: '#f7d9c4', surfaceMid: '#ecc1a5', surfaceOuter: '#dba17e',
+          grainColor: 'rgba(124, 45, 18, 0.08)', circle: '#881337', circleFill: 'rgba(136, 19, 55, 0.12)',
+          mandala: 'rgba(136, 19, 55, 0.18)', foulLine: 'rgba(80, 28, 18, 0.55)',
+          baselineActive: '#be123c', baselineIdle: 'rgba(80, 28, 18, 0.4)', baseCircleFill: '#e11d48',
+          pocket: '#0d0504', pocketRim: '#3d150d'
+        },
+        ivory: {
+          label: 'Ivory', texture: 'slate',
+          frameOuter: '#1e293b', frameMid: '#334155', frameInner: '#1e293b',
+          bevelLight: 'rgba(255, 255, 255, 0.2)', bevelDark: 'rgba(0, 0, 0, 0.4)',
+          surfaceInner: '#fafaf9', surfaceMid: '#f0efe9', surfaceOuter: '#e2e0d5',
+          grainColor: 'rgba(100, 100, 90, 0.045)', circle: '#b91c1c', circleFill: 'rgba(185, 28, 28, 0.1)',
+          mandala: 'rgba(185, 28, 28, 0.16)', foulLine: 'rgba(51, 65, 85, 0.55)',
+          baselineActive: '#d97706', baselineIdle: 'rgba(51, 65, 85, 0.38)', baseCircleFill: '#dc2626',
+          pocket: '#09090b', pocketRim: '#1e293b'
+        },
+        copper: {
+          label: 'Copper', texture: 'slate',
+          frameOuter: '#29140c', frameMid: '#4f2717', frameInner: '#361a0f',
+          bevelLight: 'rgba(253, 186, 116, 0.18)', bevelDark: 'rgba(0, 0, 0, 0.5)',
+          surfaceInner: '#d99b72', surfaceMid: '#c48157', surfaceOuter: '#a6633b',
+          grainColor: 'rgba(67, 20, 7, 0.08)', circle: '#fef3c7', circleFill: 'rgba(254, 243, 199, 0.14)',
+          mandala: 'rgba(254, 243, 199, 0.2)', foulLine: 'rgba(255, 237, 213, 0.5)',
+          baselineActive: '#fde047', baselineIdle: 'rgba(255, 237, 213, 0.35)', baseCircleFill: '#dc2626',
+          pocket: '#0a0503', pocketRim: '#361a0f'
+        }
+      };
+
+      const PIECE_THEMES = {
+        classic: {
+          label: 'Classic',
+          white: { light: '#fff9ec', mid: '#f3e5c8', dark: '#c9b48c', stroke: '#9f8b67', ring: 'rgba(140, 112, 70, 0.35)' },
+          black: { light: '#44403c', mid: '#262321', dark: '#141210', stroke: '#090807', ring: 'rgba(255, 255, 255, 0.14)' },
+          queen: { light: '#f87171', mid: '#dc2626', dark: '#881313', stroke: '#5c0c0c', ring: 'rgba(254, 202, 202, 0.35)' }
+        },
+        tournament: {
+          label: 'Tournament',
+          white: { light: '#ffffff', mid: '#f1ede4', dark: '#d6cbb8', stroke: '#a89b84', ring: 'rgba(120, 100, 70, 0.4)' },
+          black: { light: '#3f3f46', mid: '#18181b', dark: '#09090b', stroke: '#000000', ring: 'rgba(212, 212, 216, 0.22)' },
+          queen: { light: '#fb7185', mid: '#e11d48', dark: '#881337', stroke: '#4c0519', ring: 'rgba(255, 228, 230, 0.45)' }
+        },
+        marble: {
+          label: 'Marble',
+          white: { light: '#f8fafc', mid: '#e2e8f0', dark: '#94a3b8', stroke: '#64748b', ring: 'rgba(100, 116, 139, 0.35)', glossy: true },
+          black: { light: '#475569', mid: '#1e293b', dark: '#020617', stroke: '#0f172a', ring: 'rgba(148, 163, 184, 0.25)', glossy: true },
+          queen: { light: '#fda4af', mid: '#be123c', dark: '#4c0519', stroke: '#3b0714', ring: 'rgba(255, 241, 242, 0.45)', glossy: true }
+        },
+        royal: {
+          label: 'Royal',
+          white: { light: '#fef3c7', mid: '#fde68a', dark: '#d97706', stroke: '#92400e', ring: 'rgba(146, 64, 14, 0.35)' },
+          black: { light: '#6366f1', mid: '#312e81', dark: '#1e1b4b', stroke: '#0f0d29', ring: 'rgba(199, 210, 254, 0.28)' },
+          queen: { light: '#f472b6', mid: '#db2777', dark: '#831843', stroke: '#500724', ring: 'rgba(252, 231, 243, 0.45)' }
+        },
+        ivoryGold: {
+          label: 'Ivory Gold',
+          white: { light: '#fffff0', mid: '#fef9c3', dark: '#ca8a04', stroke: '#854d0e', ring: 'rgba(133, 77, 14, 0.35)', glossy: true },
+          black: { light: '#57534e', mid: '#292524', dark: '#0c0a09', stroke: '#000000', ring: 'rgba(253, 224, 71, 0.32)' },
+          queen: { light: '#fca5a5', mid: '#b91c1c', dark: '#7f1d1d', stroke: '#450a0a', ring: 'rgba(254, 240, 138, 0.45)' }
+        },
+        onyxSilver: {
+          label: 'Onyx Silver',
+          white: { light: '#f1f5f9', mid: '#cbd5e1', dark: '#64748b', stroke: '#334155', ring: 'rgba(51, 65, 85, 0.35)', glossy: true },
+          black: { light: '#334155', mid: '#0f172a', dark: '#020617', stroke: '#000000', ring: 'rgba(226, 232, 240, 0.3)', glossy: true },
+          queen: { light: '#fbcfe8', mid: '#db2777', dark: '#701a75', stroke: '#4a044e', ring: 'rgba(255, 255, 255, 0.4)', glossy: true }
+        },
+        jadeCoral: {
+          label: 'Jade Coral',
+          white: { light: '#ecfdf5', mid: '#a7f3d0', dark: '#059669', stroke: '#065f46', ring: 'rgba(6, 95, 70, 0.3)', glossy: true },
+          black: { light: '#115e59', mid: '#134e4a', dark: '#042f2e', stroke: '#022c22', ring: 'rgba(153, 246, 228, 0.25)' },
+          queen: { light: '#fed7aa', mid: '#f97316', dark: '#c2410c', stroke: '#7c2d12', ring: 'rgba(255, 247, 237, 0.5)', glossy: true }
+        },
+        woodland: {
+          label: 'Woodland',
+          white: { light: '#fef3c7', mid: '#e7c697', dark: '#b4834b', stroke: '#785026', ring: 'rgba(120, 80, 38, 0.38)' },
+          black: { light: '#78350f', mid: '#451a03', dark: '#290f02', stroke: '#1a0901', ring: 'rgba(253, 230, 138, 0.22)' },
+          queen: { light: '#fca5a5', mid: '#dc2626', dark: '#991b1b', stroke: '#450a0a', ring: 'rgba(254, 226, 226, 0.35)' }
+        },
+        sunset: {
+          label: 'Sunset',
+          white: { light: '#ffedd5', mid: '#fdba74', dark: '#ea580c', stroke: '#9a3412', ring: 'rgba(154, 52, 18, 0.35)' },
+          black: { light: '#7c2d12', mid: '#431407', dark: '#1c0a03', stroke: '#000000', ring: 'rgba(253, 186, 116, 0.25)' },
+          queen: { light: '#fde047', mid: '#eab308', dark: '#a16207', stroke: '#713f12', ring: 'rgba(254, 249, 195, 0.5)', glossy: true }
+        },
+        arctic: {
+          label: 'Arctic',
+          white: { light: '#ffffff', mid: '#e0f2fe', dark: '#7dd3fc', stroke: '#0284c7', ring: 'rgba(2, 132, 199, 0.3)', glossy: true },
+          black: { light: '#0369a1', mid: '#0c4a6e', dark: '#082f49', stroke: '#041e30', ring: 'rgba(186, 230, 253, 0.3)' },
+          queen: { light: '#fbcfe8', mid: '#f43f5e', dark: '#be123c', stroke: '#881337', ring: 'rgba(255, 255, 255, 0.45)', glossy: true }
+        },
+        copperBronze: {
+          label: 'Copper',
+          white: { light: '#ffedd5', mid: '#e5a97c', dark: '#b46939', stroke: '#7c3f1d', ring: 'rgba(124, 63, 29, 0.35)', glossy: true },
+          black: { light: '#57534e', mid: '#292524', dark: '#141210', stroke: '#000000', ring: 'rgba(251, 191, 36, 0.24)' },
+          queen: { light: '#fca5a5', mid: '#b91c1c', dark: '#7f1d1d', stroke: '#450a0a', ring: 'rgba(254, 215, 170, 0.4)' }
+        },
+        cyberNeon: {
+          label: 'Cyber Neon',
+          white: { light: '#cffafe', mid: '#22d3ee', dark: '#0891b2', stroke: '#155e75', ring: 'rgba(236, 254, 255, 0.55)', glossy: true },
+          black: { light: '#3b0764', mid: '#1e1b4b', dark: '#09051a', stroke: '#000000', ring: 'rgba(217, 70, 239, 0.45)' },
+          queen: { light: '#f5d0fe', mid: '#d946ef', dark: '#86198f', stroke: '#4a044e', ring: 'rgba(255, 255, 255, 0.6)', glossy: true }
+        },
+        pastel: {
+          label: 'Pastel',
+          white: { light: '#fffbeb', mid: '#fde68a', dark: '#f59e0b', stroke: '#b45309', ring: 'rgba(180, 83, 9, 0.28)' },
+          black: { light: '#a5b4fc', mid: '#6366f1', dark: '#4338ca', stroke: '#312e81', ring: 'rgba(238, 242, 255, 0.35)' },
+          queen: { light: '#fbcfe8', mid: '#f472b6', dark: '#db2777', stroke: '#9d174d', ring: 'rgba(255, 255, 255, 0.45)' }
+        },
+        crimsonNoir: {
+          label: 'Crimson Noir',
+          white: { light: '#f5f5f4', mid: '#d6d3d1', dark: '#a8a29e', stroke: '#57534e', ring: 'rgba(87, 83, 78, 0.35)' },
+          black: { light: '#292524', mid: '#1c1917', dark: '#09090b', stroke: '#000000', ring: 'rgba(239, 68, 68, 0.35)' },
+          queen: { light: '#fecaca', mid: '#ef4444', dark: '#991b1b', stroke: '#450a0a', ring: 'rgba(255, 255, 255, 0.5)', glossy: true }
+        },
+        emeraldGold: {
+          label: 'Emerald Gold',
+          white: { light: '#fef9c3', mid: '#fde047', dark: '#ca8a04', stroke: '#854d0e', ring: 'rgba(133, 77, 14, 0.35)', glossy: true },
+          black: { light: '#059669', mid: '#065f46', dark: '#022c22', stroke: '#011c16', ring: 'rgba(253, 224, 71, 0.35)' },
+          queen: { light: '#fda4af', mid: '#e11d48', dark: '#881337', stroke: '#4c0519', ring: 'rgba(254, 240, 138, 0.45)', glossy: true }
+        }
+      };
+
+      const STRIKER_THEMES = {
+        amber: { label: 'Amber', light: '#fde68a', mid: '#f59e0b', dark: '#b45309', stroke: '#78350f', ring: 'rgba(255, 251, 235, 0.7)' },
+        pearl: { label: 'Pearl', light: '#ffffff', mid: '#e2e8f0', dark: '#94a3b8', stroke: '#475569', ring: 'rgba(15, 23, 42, 0.28)' },
+        emerald: { label: 'Emerald', light: '#6ee7b7', mid: '#10b981', dark: '#047857', stroke: '#064e3b', ring: 'rgba(236, 253, 245, 0.65)' },
+        sapphire: { label: 'Sapphire', light: '#bae6fd', mid: '#0284c7', dark: '#075985', stroke: '#0c4a6e', ring: 'rgba(224, 242, 254, 0.7)' },
+        ruby: { label: 'Ruby', light: '#fecdd3', mid: '#e11d48', dark: '#881337', stroke: '#4c0519', ring: 'rgba(255, 228, 230, 0.65)' },
+        gold: { label: '24K Gold', light: '#fef9c3', mid: '#eab308', dark: '#a16207', stroke: '#713f12', ring: 'rgba(255, 255, 255, 0.75)' },
+        obsidian: { label: 'Obsidian', light: '#52525b', mid: '#27272a', dark: '#09090b', stroke: '#000000', ring: 'rgba(244, 244, 245, 0.45)' },
+        amethyst: { label: 'Amethyst', light: '#e9d5ff', mid: '#9333ea', dark: '#581c87', stroke: '#3b0764', ring: 'rgba(250, 245, 255, 0.65)' },
+        jade: { label: 'Jade', light: '#a7f3d0', mid: '#14b8a6', dark: '#0f766e', stroke: '#134e4a', ring: 'rgba(240, 253, 250, 0.65)' },
+        coral: { label: 'Coral', light: '#fed7aa', mid: '#f97316', dark: '#c2410c', stroke: '#7c2d12', ring: 'rgba(255, 247, 237, 0.65)' },
+        turquoise: { label: 'Turquoise', light: '#a5f3fc', mid: '#06b6d4', dark: '#0e7490', stroke: '#164e63', ring: 'rgba(236, 254, 255, 0.7)' },
+        bronze: { label: 'Bronze', light: '#fed7aa', mid: '#b45309', dark: '#78350f', stroke: '#451a03', ring: 'rgba(254, 243, 199, 0.55)' },
+        obsidianGold: { label: 'Onyx Gold', light: '#57534e', mid: '#1c1917', dark: '#09090b', stroke: '#000000', ring: 'rgba(250, 204, 21, 0.75)' },
+        roseQuartz: { label: 'Rose Quartz', light: '#fce7f3', mid: '#ec4899', dark: '#9d174d', stroke: '#500724', ring: 'rgba(253, 242, 248, 0.7)' },
+        ice: { label: 'Glacier Ice', light: '#ffffff', mid: '#7dd3fc', dark: '#0369a1', stroke: '#0c4a6e', ring: 'rgba(255, 255, 255, 0.8)' }
+      };
+
+      const RULESETS = {
+        icf: { label: 'ICF Official' },
+        quick: { label: 'Quick 1-Board' },
+        freestyle: { label: 'Freestyle' },
+        tricks: { label: 'Trick Shots' }
+      };
+
+      const TRICK_LEVELS = [
+        {
+          name: 'Twin Split',
+          shots: 1,
+          desc: 'Shoot straight up the center to split & sink both coins in 1 shot!',
+          coins: [
+            { x: CENTER - 34, y: 190, type: 'white' },
+            { x: CENTER + 34, y: 190, type: 'white' }
+          ]
+        },
+        {
+          name: 'Queen & Cover',
+          shots: 2,
+          desc: 'Pocket the Queen and cover her with White in 2 shots!',
+          coins: [
+            { x: CENTER, y: CENTER, type: 'queen' },
+            { x: 240, y: 240, type: 'white' }
+          ]
+        },
+        {
+          name: 'Corner Pair',
+          shots: 2,
+          desc: 'Sink both top corner coins in 2 clean shots!',
+          coins: [
+            { x: 155, y: 155, type: 'white' },
+            { x: 645, y: 155, type: 'white' }
+          ]
+        },
+        {
+          name: 'Cushion Rebound',
+          shots: 3,
+          desc: 'Use bank angles to clear all 3 coins in 3 shots!',
+          coins: [
+            { x: 110, y: 520, type: 'white' },
+            { x: 690, y: 520, type: 'white' },
+            { x: CENTER, y: 170, type: 'white' }
+          ]
+        },
+        {
+          name: 'Cluster Breaker',
+          shots: 3,
+          desc: 'Clear all 4 coins in 3 shots (use a split or combo)!',
+          coins: [
+            { x: CENTER - 34, y: 190, type: 'white' },
+            { x: CENTER + 34, y: 190, type: 'white' },
+            { x: 175, y: 175, type: 'white' },
+            { x: 625, y: 175, type: 'white' }
+          ]
+        },
+        {
+          name: 'Grand Master',
+          shots: 4,
+          desc: 'Clear 5 coins + Queen in 4 shots!',
+          coins: [
+            { x: CENTER, y: CENTER, type: 'queen' },
+            { x: CENTER - 34, y: 190, type: 'white' },
+            { x: CENTER + 34, y: 190, type: 'white' },
+            { x: 170, y: 170, type: 'white' },
+            { x: 630, y: 170, type: 'white' },
+            { x: CENTER, y: 235, type: 'white' }
+          ]
+        }
+      ];
+
+      const THEME_ORDER = Object.keys(THEMES);
+      const PIECE_THEME_ORDER = Object.keys(PIECE_THEMES);
+      const STRIKER_THEME_ORDER = Object.keys(STRIKER_THEMES);
+      const RULESET_ORDER = Object.keys(RULESETS);
+      const DIFF_ORDER = ['easy', 'normal', 'hard'];
+
+      const textureCache = {};
+      const boardCacheCanvas = document.createElement('canvas');
+      boardCacheCanvas.width = BOARD_SIZE;
+      boardCacheCanvas.height = BOARD_SIZE;
+      const bctx = boardCacheCanvas.getContext('2d');
+      let lastBoardCacheKey = '';
+
+      function getSurfacePattern(themeKey) {
+        if (textureCache[themeKey]) return textureCache[themeKey];
+        const t = THEMES[themeKey];
+        const off = document.createElement('canvas');
+        off.width = 256;
+        off.height = 256;
+        const octx = off.getContext('2d');
+
+        octx.fillStyle = 'transparent';
+        octx.fillRect(0, 0, 256, 256);
+        octx.strokeStyle = t.grainColor;
+
+        if (t.texture === 'wood') {
+          for (let y = 0; y < 256; y += 3) {
+            octx.lineWidth = (y % 9 === 0) ? 1.3 : 0.7;
+            octx.beginPath();
+            octx.moveTo(0, y);
+            for (let x = 0; x <= 256; x += 32) {
+              octx.lineTo(x, y + Math.sin((x + y * 2) * 0.04) * 1.6);
+            }
+            octx.stroke();
+          }
+        } else if (t.texture === 'felt') {
+          octx.lineWidth = 0.8;
+          for (let i = 0; i < 256; i += 4) {
+            octx.beginPath();
+            octx.moveTo(i, 0);
+            octx.lineTo(i, 256);
+            octx.stroke();
+            octx.beginPath();
+            octx.moveTo(0, i);
+            octx.lineTo(256, i);
+            octx.stroke();
+          }
+        } else {
+          for (let y = 0; y < 256; y += 4) {
+            octx.lineWidth = 0.9;
+            octx.beginPath();
+            octx.moveTo(0, y);
+            octx.lineTo(256, y + (y % 8 === 0 ? 1 : -1));
+            octx.stroke();
+          }
+        }
+
+        textureCache[themeKey] = bctx.createPattern(off, 'repeat');
+        return textureCache[themeKey];
+      }
+
+      let pieces = [];
+      let striker = null;
+      let strikerBlocked = false;
+      let isMoving = false;
+      let isAiming = false;
+      let boardOver = false;
+      let gameOver = false;
+      let matchOver = false;
+      let aimPoint = { x: 0, y: 0 };
+      let soundEnabled = true;
+      let audioCtx = null;
+      let animId = null;
+      let lastFrameTime = 0;
+      let physicsAccumulator = 0;
+      let lastClackTime = 0;
+
+      // Visual juice: floating popups & collision ripples
+      let popups = [];
+      let ripples = [];
+
+      let currentRuleset = 'icf'; // 'icf' | 'quick' | 'freestyle' | 'tricks'
+      let gameMode = 'bot'; // 'bot' | '2p' | 'online'
+      let ws = null;
+      let onlineRoomCode = null;
+      let onlineSeat = 1; // 1 = host (bottom), 2 = guest (top)
+      let botDifficulty = 'normal';
+      let currentTheme = 'wood';
+      let currentPieceTheme = 'classic';
+      let currentStrikerTheme = 'amber';
+
+      let matchGames = { p1: 0, p2: 0 };
+      let gameNumber = 1;
+      let boardNumber = 1;
+      let points = { p1: 0, p2: 0 };
+      let pocketedTrays = { 1: [], 2: [] };
+      let gameFirstBreaker = 1;
+      let boardBreaker = 1;
+      let currentPlayer = 1;
+      let queenOwner = null;
+      let queenPendingPlayer = null;
+      let duesPending = { 1: 0, 2: 0 };
+      let breakDone = false;
+      let breakAttempts = 0;
+      let shotTouchedCoin = false;
+      let shotPocketed = { white: 0, black: 0, queen: false, striker: false };
+      let botTimer = null;
+      let duePlacement = null;
+
+      // Trick Shots state
+      let trickIndex = 0;
+      let trickShotsLeft = 1;
+      let tricksCleared = 0;
+
+      let kbAiming = false;
+      let kbAngle = -Math.PI / 2;
+      let kbPower = 95;
+
+      let wins = { p1: 0, p2: 0 };
+
+      function loadPrefs() {
+        try {
+          const raw = localStorage.getItem('carrom_prefs_v1');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed.wins && typeof parsed.wins.p1 === 'number' && typeof parsed.wins.p2 === 'number') {
+              wins = parsed.wins;
+            }
+            if (THEMES[parsed.theme]) currentTheme = parsed.theme;
+            if (PIECE_THEMES[parsed.pieceTheme]) currentPieceTheme = parsed.pieceTheme;
+            if (STRIKER_THEMES[parsed.strikerTheme]) currentStrikerTheme = parsed.strikerTheme;
+            if (RULESETS[parsed.ruleset]) currentRuleset = parsed.ruleset;
+            if (DIFF_ORDER.includes(parsed.botDifficulty)) botDifficulty = parsed.botDifficulty;
+            if (typeof parsed.tricksCleared === 'number') tricksCleared = parsed.tricksCleared;
+          }
+        } catch (_) {}
+      }
+
+      function savePrefs() {
+        try {
+          localStorage.setItem(
+            'carrom_prefs_v1',
+            JSON.stringify({
+              wins,
+              theme: currentTheme,
+              pieceTheme: currentPieceTheme,
+              strikerTheme: currentStrikerTheme,
+              ruleset: currentRuleset,
+              botDifficulty,
+              tricksCleared
+            })
+          );
+        } catch (_) {}
+      }
+
+      function getPlayerColor(player) {
+        if (currentRuleset === 'freestyle' || currentRuleset === 'tricks') return 'any';
+        return player === boardBreaker ? 'white' : 'black';
+      }
+
+      function getActorName(player) {
+        if (gameMode === 'online') return player === onlineSeat ? 'You' : 'Opponent';
+        return player === 2 && gameMode === 'bot' ? 'Bot' : `Player ${player}`;
+      }
+
+      function isRemoteTurn() {
+        return gameMode === 'online' && currentPlayer !== onlineSeat && !boardOver && !matchOver;
+      }
+
+      function addPopup(x, y, text, color = '#fde68a') {
+        popups.push({ x, y, text, color, life: 1.0 });
+      }
+
+      function addRipple(x, y, color = 'rgba(255,255,255,0.45)', maxR = 26) {
+        ripples.push({ x, y, color, r: 6, maxR, life: 1.0 });
+      }
+
+      // --- Web Audio API Sound Effects ---
+      function ensureAudio() {
+        if (!soundEnabled) return null;
+        if (!audioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) audioCtx = new AudioCtx();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      }
+
+      function playClack(intensity = 0.5) {
+        const ac = ensureAudio();
+        if (!ac || !soundEnabled) return;
+        const now = performance.now();
+        if (now - lastClackTime < 18) return;
+        lastClackTime = now;
+        const vol = Math.min(0.45, Math.max(0.04, intensity * 0.35));
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320 + intensity * 260, ac.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(110, ac.currentTime + 0.055);
+        gain.gain.setValueAtTime(vol, ac.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start();
+        osc.stop(ac.currentTime + 0.065);
+      }
+
+      function playPocketSound(isQueen = false) {
+        const ac = ensureAudio();
+        if (!ac || !soundEnabled) return;
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(isQueen ? 440 : 220, ac.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(isQueen ? 660 : 75, ac.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.32, ac.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start();
+        osc.stop(ac.currentTime + 0.19);
+      }
+
+      // --- Board & Placement Helpers ---
+      function createPiece(x, y, type) {
+        const isStriker = type === 'striker';
+        return {
+          x,
+          y,
+          prevX: x,
+          prevY: y,
+          vx: 0,
+          vy: 0,
+          r: isStriker ? STRIKER_R : COIN_R,
+          mass: isStriker ? 2.8 : 1.0,
+          type,
+          pocketed: false,
+          dropping: false,
+          dropScale: 1,
+          dropTargetX: x,
+          dropTargetY: y
+        };
+      }
+
+      function getActiveBaselineY() {
+        return currentPlayer === 1 ? BOTTOM_BASELINE_Y : TOP_BASELINE_Y;
+      }
+
+      function isBotTurn() {
+        return currentRuleset !== 'tricks' && gameMode === 'bot' && currentPlayer === 2 && !boardOver && !matchOver && !duePlacement;
+      }
+
+      function clampStrikerX(rawX) {
+        const minClear = CENTER - BASELINE_HALF + 12 + STRIKER_R + 2;
+        const maxClear = CENTER + BASELINE_HALF - 12 - STRIKER_R - 2;
+        const leftCircleX = CENTER - BASELINE_HALF;
+        const rightCircleX = CENTER + BASELINE_HALF;
+
+        if (rawX < minClear) {
+          return rawX < (leftCircleX + minClear) / 2 ? leftCircleX : minClear;
+        }
+        if (rawX > maxClear) {
+          return rawX > (rightCircleX + maxClear) / 2 ? rightCircleX : maxClear;
+        }
+        return rawX;
+      }
+
+      function isStrikerClear(x, y) {
+        return !pieces.some(
+          (p) => p !== striker && !p.pocketed && Math.hypot(p.x - x, p.y - y) < p.r + STRIKER_R + 1.5
+        );
+      }
+
+      function findNearestClearStrikerX(preferredX, y) {
+        const candidates = [preferredX];
+        for (let offset = 6; offset <= BASELINE_HALF * 2; offset += 6) {
+          if (preferredX + offset <= CENTER + BASELINE_HALF) candidates.push(preferredX + offset);
+          if (preferredX - offset >= CENTER - BASELINE_HALF) candidates.push(preferredX - offset);
+        }
+        for (const raw of candidates) {
+          const cx = clampStrikerX(raw);
+          if (isStrikerClear(cx, y)) return cx;
+        }
+        return null;
+      }
+
+      function isValidDueSpot(x, y) {
+        const distFromCenter = Math.hypot(x - CENTER, y - CENTER);
+        if (distFromCenter + COIN_R > OUTER_CIRCLE_R) return false;
+        if (distFromCenter < CENTRE_CIRCLE_R + COIN_R - 2) return false;
+        return !pieces.some(
+          (p) => p !== striker && !p.pocketed && Math.hypot(p.x - x, p.y - y) < p.r + COIN_R + 1.5
+        );
+      }
+
+      function returnPieceToBoard(type, inOuterCircle = true, customPos = null) {
+        const target = pieces.find((p) => p.type === type && p.pocketed);
+        if (!target) return false;
+        target.pocketed = false;
+        target.dropping = false;
+        target.dropScale = 1;
+        target.vx = 0;
+        target.vy = 0;
+
+        if (customPos) {
+          target.x = customPos.x;
+          target.y = customPos.y;
+          target.prevX = customPos.x;
+          target.prevY = customPos.y;
+          return true;
+        }
+
+        const startRadius = inOuterCircle && type !== 'queen' ? 42 : 0;
+        let angle = 0;
+        let radius = startRadius;
+        for (let attempt = 0; attempt < 48; attempt++) {
+          const cx = CENTER + Math.cos(angle) * radius;
+          const cy = CENTER + Math.sin(angle) * radius;
+          const overlaps = pieces.some(
+            (p) => p !== target && !p.pocketed && Math.hypot(p.x - cx, p.y - cy) < p.r + target.r + 2
+          );
+          if (!overlaps) {
+            target.x = cx;
+            target.y = cy;
+            target.prevX = cx;
+            target.prevY = cy;
+            return true;
+          }
+          angle += Math.PI / 4;
+          if (attempt % 8 === 7) radius += COIN_R * 2.05;
+        }
+        target.x = CENTER;
+        target.y = CENTER;
+        target.prevX = CENTER;
+        target.prevY = CENTER;
+        return true;
+      }
+
+      function setupBoard() {
+        if (botTimer) {
+          clearTimeout(botTimer);
+          botTimer = null;
+        }
+        pieces = [];
+        popups = [];
+        ripples = [];
+        boardOver = false;
+        duePlacement = null;
+        queenOwner = null;
+        queenPendingPlayer = null;
+        duesPending = { 1: 0, 2: 0 };
+        pocketedTrays = { 1: [], 2: [] };
+        breakDone = currentRuleset === 'freestyle' || currentRuleset === 'tricks';
+        breakAttempts = 0;
+        currentPlayer = currentRuleset === 'tricks' ? 1 : boardBreaker;
+        kbAiming = false;
+        kbAngle = currentPlayer === 1 ? -Math.PI / 2 : Math.PI / 2;
+        shotPocketed = { white: 0, black: 0, queen: false, striker: false };
+
+        if (currentRuleset === 'tricks') {
+          const lvl = TRICK_LEVELS[trickIndex];
+          trickShotsLeft = lvl.shots;
+          for (const c of lvl.coins) {
+            pieces.push(createPiece(c.x, c.y, c.type));
+          }
+        } else {
+          const baseOrientation = boardBreaker === 1 ? Math.PI / 2 : -Math.PI / 2;
+          const d = COIN_R * 2 + 1.5;
+          pieces.push(createPiece(CENTER, CENTER, 'queen'));
+
+          for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3 + baseOrientation;
+            const type = i % 2 === 0 ? 'white' : 'black';
+            pieces.push(createPiece(CENTER + Math.cos(angle) * d, CENTER + Math.sin(angle) * d, type));
+          }
+
+          for (let i = 0; i < 6; i++) {
+            const cornerAngle = (i * Math.PI) / 3 + baseOrientation;
+            pieces.push(
+              createPiece(
+                CENTER + Math.cos(cornerAngle) * (2 * d),
+                CENTER + Math.sin(cornerAngle) * (2 * d),
+                'white'
+              )
+            );
+            const midAngle = cornerAngle + Math.PI / 6;
+            const midDist = Math.sqrt(3) * d;
+            pieces.push(
+              createPiece(
+                CENTER + Math.cos(midAngle) * midDist,
+                CENTER + Math.sin(midAngle) * midDist,
+                'black'
+              )
+            );
+          }
+        }
+
+        striker = createPiece(CENTER, getActiveBaselineY(), 'striker');
+        pieces.push(striker);
+        strikerBlocked = false;
+
+        isMoving = false;
+        isAiming = false;
+        nextBoardBtn.classList.add('hidden');
+        foregoDueBtn.classList.add('hidden');
+        strikerSlider.disabled = isBotTurn() || isRemoteTurn();
+        strikerSlider.value = '0';
+
+        if (currentRuleset === 'tricks') {
+          const lvl = TRICK_LEVELS[trickIndex];
+          updateHUD(`Stage ${trickIndex + 1}/${TRICK_LEVELS.length} (${lvl.name}): ${lvl.desc}`);
+        } else if (currentRuleset === 'freestyle') {
+          updateHUD(`Freestyle: ${getActorName(currentPlayer)} breaks — White 10, Black 20, Queen 50!`);
+        } else {
+          updateHUD(`Board ${boardNumber}: ${getActorName(boardBreaker)} breaks (White) — 3 tries to hit the rack!`);
+        }
+
+        if (isBotTurn()) scheduleBotTurn();
+      }
+
+      function startNewMatch() {
+        matchGames = { p1: 0, p2: 0 };
+        gameNumber = 1;
+        boardNumber = 1;
+        points = { p1: 0, p2: 0 };
+        gameFirstBreaker = 1;
+        boardBreaker = 1;
+        gameOver = false;
+        matchOver = false;
+        setupBoard();
+      }
+
+      function renderTray(el, list) {
+        const pPalette = PIECE_THEMES[currentPieceTheme];
+        el.innerHTML = '';
+        for (const t of list) {
+          const dot = document.createElement('span');
+          dot.className = 'w-2.5 h-2.5 rounded-full border inline-block';
+          dot.style.backgroundColor = pPalette[t].mid;
+          dot.style.borderColor = pPalette[t].stroke;
+          el.appendChild(dot);
+        }
+      }
+
+      function updateHUD(msg) {
+        if (msg) statusText.textContent = msg;
+
+        const pPalette = PIECE_THEMES[currentPieceTheme];
+        rulesetBtn.textContent = `Ruleset: ${RULESETS[currentRuleset].label}`;
+        modeBtn.textContent = gameMode === 'bot' ? 'Mode: vs Bot' : 'Mode: 2 Players';
+        modeBtn.classList.toggle('hidden', currentRuleset === 'tricks');
+        diffBtn.textContent = `Bot: ${botDifficulty.charAt(0).toUpperCase() + botDifficulty.slice(1)}`;
+        diffBtn.classList.toggle('hidden', gameMode !== 'bot' || currentRuleset === 'tricks');
+        themeBtn.textContent = `Theme: ${THEMES[currentTheme].label}`;
+        piecesBtn.textContent = `Pieces: ${pPalette.label}`;
+        strikerBtn.textContent = `Striker: ${STRIKER_THEMES[currentStrikerTheme].label}`;
+
+        const totalCoins = pieces.filter((p) => p.type !== 'striker').length;
+        const pocketedCoins = pieces.filter((p) => p.type !== 'striker' && p.pocketed).length;
+        pocketCountEl.textContent = `Pocketed: ${pocketedCoins} / ${totalCoins}`;
+
+        if (currentRuleset === 'tricks') {
+          const lvl = TRICK_LEVELS[trickIndex];
+          matchMeta.textContent = `Trick Shot ${trickIndex + 1}/${TRICK_LEVELS.length} · ${lvl.name}`;
+          p1Label.textContent = 'P1 · Solo';
+          p2Label.textContent = 'Cleared';
+          p1ScoreEl.textContent = `${pocketedCoins} / ${totalCoins}`;
+          p1PointsEl.textContent = `${trickShotsLeft} shot${trickShotsLeft === 1 ? '' : 's'}`;
+          p2ScoreEl.textContent = `${tricksCleared}`;
+          p2PointsEl.textContent = `puzzles`;
+          centerLabel.textContent = 'Target';
+          queenStatusEl.textContent = lvl.name;
+          queenStatusEl.className = 'text-xs font-semibold text-amber-300 mt-0.5';
+          gamesScoreEl.textContent = `Shots Left: ${trickShotsLeft}`;
+          p1DueEl.textContent = '';
+          p2DueEl.textContent = '';
+        } else if (currentRuleset === 'freestyle') {
+          matchMeta.textContent = `Freestyle Arcade · First to 160 pts`;
+          p1Label.textContent = 'P1 · Freestyle';
+          p2Label.textContent = `${gameMode === 'bot' ? 'Bot' : 'P2'} · Freestyle`;
+          p1ScoreEl.textContent = `${points.p1} pts`;
+          p1PointsEl.textContent = `${pocketedTrays[1].length} coins`;
+          p2ScoreEl.textContent = `${points.p2} pts`;
+          p2PointsEl.textContent = `${pocketedTrays[2].length} coins`;
+          centerLabel.textContent = 'Queen';
+          gamesScoreEl.textContent = `Target: 160 pts`;
+          p1DueEl.textContent = `Due: ${duesPending[1]}`;
+          p2DueEl.textContent = `Due: ${duesPending[2]}`;
+        } else {
+          const p1Col = getPlayerColor(1);
+          const p2Col = getPlayerColor(2);
+          p1Label.textContent = `P1 · ${p1Col === 'white' ? 'White' : 'Black'}`;
+          p2Label.textContent = `${gameMode === 'bot' ? 'Bot' : 'P2'} · ${p2Col === 'white' ? 'White' : 'Black'}`;
+          p1ColorDot.style.backgroundColor = pPalette[p1Col].mid;
+          p1ColorDot.style.borderColor = pPalette[p1Col].stroke;
+          p2ColorDot.style.backgroundColor = pPalette[p2Col].mid;
+          p2ColorDot.style.borderColor = pPalette[p2Col].stroke;
+
+          const p1Pocketed = pieces.filter((p) => p.type === p1Col && p.pocketed).length;
+          const p2Pocketed = pieces.filter((p) => p.type === p2Col && p.pocketed).length;
+          p1ScoreEl.textContent = `${p1Pocketed} / 9`;
+          p2ScoreEl.textContent = `${p2Pocketed} / 9`;
+          p1PointsEl.textContent = `${points.p1} pts`;
+          p2PointsEl.textContent = `${points.p2} pts`;
+          p1DueEl.textContent = `Due: ${duesPending[1]}`;
+          p2DueEl.textContent = `Due: ${duesPending[2]}`;
+          centerLabel.textContent = 'Queen';
+
+          if (currentRuleset === 'quick') {
+            matchMeta.textContent = `Quick 1-Board · Clear all 9 coins to win`;
+            gamesScoreEl.textContent = `Single Board`;
+          } else {
+            const boardCapLabel = boardNumber > 8 ? 'Tie-Break' : `Board ${boardNumber}/8`;
+            matchMeta.textContent = `Game ${gameNumber}/3 · ${boardCapLabel} · First to 25 pts`;
+            gamesScoreEl.textContent = `Games: ${matchGames.p1} - ${matchGames.p2}`;
+          }
+        }
+
+        if (currentRuleset !== 'tricks') {
+          if (queenOwner === 1) {
+            const ptsNote = currentRuleset === 'icf' ? (points.p1 >= 22 ? '0 pts (22+)' : '+3 pts') : currentRuleset === 'freestyle' ? '+50 pts' : 'Covered';
+            queenStatusEl.textContent = `P1 (${ptsNote})`;
+            queenStatusEl.className = 'text-xs font-semibold text-amber-300 mt-0.5';
+          } else if (queenOwner === 2) {
+            const ptsNote = currentRuleset === 'icf' ? (points.p2 >= 22 ? '0 pts (22+)' : '+3 pts') : currentRuleset === 'freestyle' ? '+50 pts' : 'Covered';
+            queenStatusEl.textContent = `${getActorName(2)} (${ptsNote})`;
+            queenStatusEl.className = 'text-xs font-semibold text-amber-300 mt-0.5';
+          } else if (queenPendingPlayer) {
+            queenStatusEl.textContent = `${getActorName(queenPendingPlayer)} Must Cover`;
+            queenStatusEl.className = 'text-xs font-semibold text-rose-300 mt-0.5 animate-pulse';
+          } else {
+            queenStatusEl.textContent = 'On Board';
+            queenStatusEl.className = 'text-xs font-semibold text-rose-400 mt-0.5';
+          }
+        }
+
+        p1WinsEl.textContent = `Matches: ${wins.p1}`;
+        p2WinsEl.textContent = `Matches: ${wins.p2}`;
+        renderTray(p1TrayEl, pocketedTrays[1]);
+        renderTray(p2TrayEl, pocketedTrays[2]);
+
+        p1Card.className = `rounded-xl p-2.5 border transition ${
+          currentPlayer === 1 && !boardOver && !matchOver
+            ? 'bg-stone-800 border-amber-500 shadow-lg shadow-amber-500/10'
+            : 'bg-stone-900/60 border-stone-800 opacity-75'
+        }`;
+        p2Card.className = `rounded-xl p-2.5 border transition ${
+          currentPlayer === 2 && !boardOver && !matchOver
+            ? 'bg-stone-800 border-amber-500 shadow-lg shadow-amber-500/10'
+            : 'bg-stone-900/60 border-stone-800 opacity-75'
+        }`;
+      }
+
+      function positionStrikerFromSlider() {
+        if (isMoving || isAiming || boardOver || matchOver || duePlacement) return;
+        const t = parseFloat(strikerSlider.value);
+        const y = getActiveBaselineY();
+        const x = clampStrikerX(CENTER + t * BASELINE_HALF);
+        striker.x = x;
+        striker.y = y;
+        striker.prevX = x;
+        striker.prevY = y;
+        striker.vx = 0;
+        striker.vy = 0;
+        striker.pocketed = false;
+        striker.dropping = false;
+        striker.dropScale = 1;
+        strikerBlocked = !isStrikerClear(x, y);
+        if (strikerBlocked) {
+          statusText.textContent = 'Blocked! Slide striker clear of coins on the baseline.';
+        }
+      }
+
+      function prepareNextTurnBaseline(msg) {
+        const y = getActiveBaselineY();
+        const clearX = findNearestClearStrikerX(CENTER, y);
+        if (clearX === null) {
+          boardOver = true;
+          strikerSlider.disabled = true;
+          nextBoardBtn.textContent = 'Replay Board';
+          nextBoardBtn.classList.remove('hidden');
+          updateHUD('Baseline completely blocked by coins (ICF Law 136) — replay board!');
+          return;
+        }
+        striker.x = clearX;
+        striker.y = y;
+        striker.prevX = clearX;
+        striker.prevY = y;
+        striker.vx = 0;
+        striker.vy = 0;
+        striker.pocketed = false;
+        striker.dropping = false;
+        striker.dropScale = 1;
+        strikerBlocked = false;
+        strikerSlider.value = ((clearX - CENTER) / BASELINE_HALF).toFixed(2);
+        kbAiming = false;
+        kbAngle = currentPlayer === 1 ? -Math.PI / 2 : Math.PI / 2;
+        strikerSlider.disabled = isBotTurn() || isRemoteTurn();
+        updateHUD(msg);
+        if (isBotTurn()) scheduleBotTurn();
+      }
+
+      function finishDuePlacement(foregone = false) {
+        if (!duePlacement) return;
+        const { nextPlayer, postMsg } = duePlacement;
+        duePlacement = null;
+        foregoDueBtn.classList.add('hidden');
+        currentPlayer = nextPlayer;
+        const finalMsg = foregone ? `Due foregone. ${postMsg}` : postMsg;
+        prepareNextTurnBaseline(finalMsg);
+      }
+
+      function beginDuePlacementIfReady(offender, beneficiary, nextPlayer, postMsg) {
+        const color = getPlayerColor(offender);
+        const targetColor = color === 'any' ? null : color;
+        const available = pieces.filter((p) => (targetColor ? p.type === targetColor : p.type !== 'striker' && p.type !== 'queen') && p.pocketed).length;
+        const toPlace = Math.min(duesPending[offender], available);
+        if (toPlace <= 0) {
+          currentPlayer = nextPlayer;
+          prepareNextTurnBaseline(postMsg);
+          return;
+        }
+
+        const placeColor = targetColor || 'white';
+        if (gameMode === 'bot' && beneficiary === 2) {
+          for (let i = 0; i < toPlace; i++) {
+            returnPieceToBoard(placeColor, true);
+            duesPending[offender] -= 1;
+          }
+          currentPlayer = nextPlayer;
+          prepareNextTurnBaseline(postMsg);
+          return;
+        }
+
+        duePlacement = { offender, beneficiary, color: placeColor, count: toPlace, nextPlayer, postMsg };
+        strikerSlider.disabled = true;
+        foregoDueBtn.classList.remove('hidden');
+        updateHUD(
+          `${getActorName(beneficiary)}: tap inside the Outer Circle to place ${getActorName(offender)}'s Due coin (${toPlace} left), or Forego Due.`
+        );
+      }
+
+      // --- Bot AI ---
+      function scheduleBotTurn() {
+        if (!isBotTurn()) return;
+        strikerSlider.disabled = true;
+        updateHUD('Bot is lining up a shot...');
+
+        botTimer = setTimeout(() => {
+          if (!isBotTurn()) return;
+
+          const botColor = getPlayerColor(2);
+          const myCoins = pieces.filter((p) =>
+            botColor === 'any' ? (p.type === 'white' || p.type === 'black') && !p.pocketed : p.type === botColor && !p.pocketed
+          );
+          const queen = pieces.find((p) => p.type === 'queen' && !p.pocketed);
+          const canPocketQueen = botColor === 'any' ? true : myCoins.length < 9;
+          const targets =
+            queenPendingPlayer === 2 || !canPocketQueen || myCoins.length === 1
+              ? myCoins
+              : queen
+                ? [queen, ...myCoins]
+                : myCoins;
+
+          let bestShot = null;
+          let bestScore = -Infinity;
+
+          for (const target of targets) {
+            for (const pk of POCKETS) {
+              const toPkX = pk.x - target.x;
+              const toPkY = pk.y - target.y;
+              const distToPk = Math.hypot(toPkX, toPkY);
+              if (distToPk < 1) continue;
+              const ux = toPkX / distToPk;
+              const uy = toPkY / distToPk;
+
+              const impactX = target.x - ux * (COIN_R + STRIKER_R - 2);
+              const impactY = target.y - uy * (COIN_R + STRIKER_R - 2);
+
+              let sx = CENTER;
+              if (Math.abs(uy) > 0.15) {
+                sx = impactX - (ux / uy) * (impactY - TOP_BASELINE_Y);
+              } else {
+                sx = impactX;
+              }
+              sx = findNearestClearStrikerX(
+                Math.max(CENTER - BASELINE_HALF, Math.min(CENTER + BASELINE_HALF, sx)),
+                TOP_BASELINE_Y
+              );
+              if (sx === null) continue;
+
+              const shotDx = impactX - sx;
+              const shotDy = impactY - TOP_BASELINE_Y;
+              const shotDist = Math.hypot(shotDx, shotDy);
+              if (shotDist < 10) continue;
+
+              const sxu = shotDx / shotDist;
+              const syu = shotDy / shotDist;
+              const cutDot = sxu * ux + syu * uy;
+              if (cutDot < 0.25) continue;
+
+              let score = cutDot * 120 - distToPk * 0.12 - shotDist * 0.08;
+              if (target.type === 'queen') score += botDifficulty === 'hard' ? 24 : 12;
+              if (botColor === 'any' && target.type === 'black') score += 10;
+
+              if (score > bestScore) {
+                bestScore = score;
+                const power = Math.min(MAX_PULL, Math.max(75, (shotDist + distToPk) * 0.24));
+                bestShot = { sx, nx: sxu, ny: syu, power };
+              }
+            }
+          }
+
+          if (!bestShot && myCoins.length > 0) {
+            const target = myCoins[0];
+            const sx = findNearestClearStrikerX(
+              Math.max(CENTER - BASELINE_HALF, Math.min(CENTER + BASELINE_HALF, target.x)),
+              TOP_BASELINE_Y
+            );
+            if (sx !== null) {
+              const dx = target.x - sx;
+              const dy = target.y - TOP_BASELINE_Y;
+              const dist = Math.hypot(dx, dy) || 1;
+              bestShot = { sx, nx: dx / dist, ny: dy / dist, power: 118 };
+            }
+          }
+
+          if (bestShot) {
+            const jitterMax = botDifficulty === 'easy' ? 0.14 : botDifficulty === 'normal' ? 0.04 : 0;
+            if (jitterMax > 0) {
+              const jitter = (Math.random() * 2 - 1) * jitterMax;
+              const angle = Math.atan2(bestShot.ny, bestShot.nx) + jitter;
+              bestShot.nx = Math.cos(angle);
+              bestShot.ny = Math.sin(angle);
+            }
+
+            striker.x = bestShot.sx;
+            striker.y = TOP_BASELINE_Y;
+            striker.prevX = bestShot.sx;
+            striker.prevY = TOP_BASELINE_Y;
+            strikerBlocked = false;
+            strikerSlider.value = ((striker.x - CENTER) / BASELINE_HALF).toFixed(2);
+            isAiming = true;
+            aimPoint = {
+              x: striker.x - bestShot.nx * bestShot.power,
+              y: striker.y - bestShot.ny * bestShot.power
+            };
+
+            botTimer = setTimeout(() => {
+              if (!isBotTurn()) return;
+              isAiming = false;
+              striker.vx = bestShot.nx * bestShot.power * SHOT_POWER;
+              striker.vy = bestShot.ny * bestShot.power * SHOT_POWER;
+              shotPocketed = { white: 0, black: 0, queen: false, striker: false };
+              shotTouchedCoin = false;
+              isMoving = true;
+              playClack(0.7);
+              updateHUD('Bot took a shot...');
+            }, 280);
+          }
+        }, 380);
+      }
+
+      // --- Responsive Canvas Sizing ---
+      function resizeCanvas() {
+        const rect = boardWrap.getBoundingClientRect();
+        const size = Math.max(240, Math.floor(Math.min(rect.width, rect.height)));
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+        ctx.setTransform((size * dpr) / BOARD_SIZE, 0, 0, (size * dpr) / BOARD_SIZE, 0, 0);
+        draw();
+      }
+
+      function getBoardCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: ((e.clientX - rect.left) / rect.width) * BOARD_SIZE,
+          y: ((e.clientY - rect.top) / rect.height) * BOARD_SIZE
+        };
+      }
+
+      // --- Pointer Controls ---
+      canvas.addEventListener('pointerdown', (e) => {
+        ensureAudio();
+        if (duePlacement) {
+          const pt = getBoardCoords(e);
+          if (isValidDueSpot(pt.x, pt.y)) {
+            returnPieceToBoard(duePlacement.color, true, pt);
+            duesPending[duePlacement.offender] -= 1;
+            duePlacement.count -= 1;
+            playClack(0.35);
+            if (duePlacement.count <= 0) {
+              finishDuePlacement(false);
+            } else {
+              updateHUD(
+                `${getActorName(duePlacement.beneficiary)}: place ${duePlacement.count} more Due coin inside the Outer Circle.`
+              );
+            }
+          } else {
+            updateHUD('Invalid spot — place inside the Outer Circle without touching the Centre Circle or other coins.');
+          }
+          return;
+        }
+
+        if (isMoving || boardOver || matchOver || isBotTurn() || isRemoteTurn()) return;
+        const pt = getBoardCoords(e);
+        const dx = pt.x - striker.x;
+        const dy = pt.y - striker.y;
+        if (Math.hypot(dx, dy) <= STRIKER_R * 2.2) {
+          if (strikerBlocked) {
+            updateHUD('Blocked! Slide striker clear of coins on the baseline before shooting.');
+            return;
+          }
+          kbAiming = false;
+          isAiming = true;
+          aimPoint = pt;
+          canvas.setPointerCapture(e.pointerId);
+          updateHUD(`${getActorName(currentPlayer)}: drag back to set power, release to shoot!`);
+        }
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (!isAiming || isBotTurn() || isRemoteTurn()) return;
+        aimPoint = getBoardCoords(e);
+      });
+
+      function releaseShot(e) {
+        if (!isAiming || isBotTurn() || isRemoteTurn()) return;
+        isAiming = false;
+        if (e && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
+          canvas.releasePointerCapture(e.pointerId);
+        }
+
+        const dx = striker.x - aimPoint.x;
+        const dy = striker.y - aimPoint.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist > 14) {
+          const clamped = Math.min(dist, MAX_PULL);
+          const nx = dx / dist;
+          const ny = dy / dist;
+          striker.vx = nx * clamped * SHOT_POWER;
+          striker.vy = ny * clamped * SHOT_POWER;
+          shotPocketed = { white: 0, black: 0, queen: false, striker: false };
+          shotTouchedCoin = false;
+          isMoving = true;
+          strikerSlider.disabled = true;
+          if (gameMode === 'online' && ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'shot', room: onlineRoomCode, sx: striker.x, vx: striker.vx, vy: striker.vy }));
+          }
+          playClack(0.7);
+          updateHUD(`${getActorName(currentPlayer)}'s shot in play...`);
+        } else {
+          updateHUD(`${getActorName(currentPlayer)}'s turn — pull back farther to shoot!`);
+        }
+      }
+
+      canvas.addEventListener('pointerup', releaseShot);
+      canvas.addEventListener('pointercancel', () => {
+        if (isBotTurn() || isRemoteTurn()) return;
+        isAiming = false;
+        updateHUD(`${getActorName(currentPlayer)}'s turn — pull back on the striker to shoot!`);
+      });
+
+      // --- Keyboard Controls ---
+      window.addEventListener('keydown', (e) => {
+        if (isMoving || boardOver || matchOver || isBotTurn() || isRemoteTurn() || duePlacement) return;
+        if (rulesModal.classList.contains('flex')) return;
+
+        const key = e.key.toLowerCase();
+        if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(key)) {
+          e.preventDefault();
+        }
+
+        if (key === 'arrowleft') {
+          strikerSlider.value = Math.max(-1, parseFloat(strikerSlider.value) - 0.06).toFixed(2);
+          positionStrikerFromSlider();
+        } else if (key === 'arrowright') {
+          strikerSlider.value = Math.min(1, parseFloat(strikerSlider.value) + 0.06).toFixed(2);
+          positionStrikerFromSlider();
+        } else if (key === 'a') {
+          kbAiming = true;
+          kbAngle -= 0.07;
+        } else if (key === 'd') {
+          kbAiming = true;
+          kbAngle += 0.07;
+        } else if (key === 'arrowup' || key === 'w') {
+          kbAiming = true;
+          kbPower = Math.min(MAX_PULL, kbPower + 8);
+        } else if (key === 'arrowdown' || key === 's') {
+          kbAiming = true;
+          kbPower = Math.max(25, kbPower - 8);
+        } else if (key === ' ' || key === 'enter') {
+          if (strikerBlocked) {
+            updateHUD('Blocked! Slide striker clear of coins on the baseline before shooting.');
+            return;
+          }
+          ensureAudio();
+          kbAiming = false;
+          striker.vx = Math.cos(kbAngle) * kbPower * SHOT_POWER;
+          striker.vy = Math.sin(kbAngle) * kbPower * SHOT_POWER;
+          shotPocketed = { white: 0, black: 0, queen: false, striker: false };
+          shotTouchedCoin = false;
+          isMoving = true;
+          strikerSlider.disabled = true;
+          if (gameMode === 'online' && ws && ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'shot', room: onlineRoomCode, sx: striker.x, vx: striker.vx, vy: striker.vy }));
+          }
+          playClack(0.7);
+          updateHUD(`${getActorName(currentPlayer)}'s shot in play...`);
+        }
+      });
+
+      strikerSlider.addEventListener('input', positionStrikerFromSlider);
+      foregoDueBtn.addEventListener('click', () => {
+        if (!duePlacement) return;
+        duesPending[duePlacement.offender] = Math.max(0, duesPending[duePlacement.offender] - duePlacement.count);
+        finishDuePlacement(true);
+      });
+      resetBtn.addEventListener('click', () => {
+        ensureAudio();
+        if (currentRuleset === 'tricks') {
+          setupBoard();
+        } else {
+          startNewMatch();
+        }
+      });
+      nextBoardBtn.addEventListener('click', () => {
+        ensureAudio();
+        if (currentRuleset === 'tricks') {
+          if (nextBoardBtn.textContent.startsWith('Next')) {
+            trickIndex = (trickIndex + 1) % TRICK_LEVELS.length;
+          }
+          setupBoard();
+          return;
+        }
+        if (nextBoardBtn.textContent === 'Replay Board') {
+          setupBoard();
+        } else if (matchOver) {
+          startNewMatch();
+        } else if (gameOver) {
+          gameNumber += 1;
+          boardNumber = 1;
+          points = { p1: 0, p2: 0 };
+          gameFirstBreaker = gameFirstBreaker === 1 ? 2 : 1;
+          boardBreaker = gameFirstBreaker;
+          gameOver = false;
+          setupBoard();
+        } else {
+          boardNumber += 1;
+          boardBreaker = boardBreaker === 1 ? 2 : 1;
+          setupBoard();
+        }
+      });
+      soundBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundBtn.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
+        if (soundEnabled) ensureAudio();
+      });
+      rulesetBtn.addEventListener('click', () => {
+        ensureAudio();
+        const idx = RULESET_ORDER.indexOf(currentRuleset);
+        currentRuleset = RULESET_ORDER[(idx + 1) % RULESET_ORDER.length];
+        savePrefs();
+        startNewMatch();
+      });
+      modeBtn.addEventListener('click', () => {
+        ensureAudio();
+        gameMode = gameMode === 'bot' ? '2p' : 'bot';
+        startNewMatch();
+      });
+      diffBtn.addEventListener('click', () => {
+        ensureAudio();
+        const idx = DIFF_ORDER.indexOf(botDifficulty);
+        botDifficulty = DIFF_ORDER[(idx + 1) % DIFF_ORDER.length];
+        savePrefs();
+        updateHUD();
+      });
+      themeBtn.addEventListener('click', () => {
+        ensureAudio();
+        const idx = THEME_ORDER.indexOf(currentTheme);
+        currentTheme = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+        savePrefs();
+        updateHUD();
+      });
+      piecesBtn.addEventListener('click', () => {
+        ensureAudio();
+        const idx = PIECE_THEME_ORDER.indexOf(currentPieceTheme);
+        currentPieceTheme = PIECE_THEME_ORDER[(idx + 1) % PIECE_THEME_ORDER.length];
+        savePrefs();
+        updateHUD();
+      });
+      strikerBtn.addEventListener('click', () => {
+        ensureAudio();
+        const idx = STRIKER_THEME_ORDER.indexOf(currentStrikerTheme);
+        currentStrikerTheme = STRIKER_THEME_ORDER[(idx + 1) % STRIKER_THEME_ORDER.length];
+        savePrefs();
+        updateHUD();
+      });
+      rulesBtn.addEventListener('click', () => {
+        rulesModal.classList.remove('hidden');
+        rulesModal.classList.add('flex');
+      });
+      closeRulesBtn.addEventListener('click', () => {
+        rulesModal.classList.add('hidden');
+        rulesModal.classList.remove('flex');
+      });
+      rulesModal.addEventListener('click', (e) => {
+        if (e.target === rulesModal) {
+          rulesModal.classList.add('hidden');
+          rulesModal.classList.remove('flex');
+        }
+      });
+
+      // --- Board End & Scoring ---
+      function finishBoard(winner, reasonMsg, queenBonusOverride = null) {
+        boardOver = true;
+        strikerSlider.disabled = true;
+
+        if (currentRuleset === 'quick') {
+          matchOver = true;
+          const wKey = winner === 1 ? 'p1' : 'p2';
+          wins[wKey] += 1;
+          savePrefs();
+          nextBoardBtn.textContent = 'Play Again';
+          nextBoardBtn.classList.remove('hidden');
+          updateHUD(`${reasonMsg} ${getActorName(winner)} wins the Quick Match!`);
+          return;
+        }
+
+        const loser = winner === 1 ? 2 : 1;
+        const loserColor = getPlayerColor(loser);
+        const loserCoinsLeft = pieces.filter((p) => p.type === loserColor && !p.pocketed).length;
+        const winnerKey = winner === 1 ? 'p1' : 'p2';
+        const preScore = points[winnerKey];
+
+        let queenPts = 0;
+        if (queenBonusOverride !== null) {
+          queenPts = preScore >= 22 ? 1 : queenBonusOverride;
+        } else if (queenOwner === winner && preScore < 22) {
+          queenPts = 3;
+        }
+
+        const boardPts = Math.min(12, loserCoinsLeft + queenPts);
+        points[winnerKey] += boardPts;
+
+        const winnerName = getActorName(winner);
+        let msg = `${reasonMsg} ${winnerName} scores +${boardPts} pts (${points.p1}–${points.p2}).`;
+
+        const reached25 = points[winnerKey] >= 25;
+        const finished8Boards = boardNumber >= 8 && points.p1 !== points.p2;
+
+        if (reached25 || finished8Boards) {
+          gameOver = true;
+          const gameWinner = points.p1 > points.p2 ? 1 : 2;
+          const gwKey = gameWinner === 1 ? 'p1' : 'p2';
+          matchGames[gwKey] += 1;
+
+          if (matchGames[gwKey] >= 2) {
+            matchOver = true;
+            wins[gwKey] += 1;
+            savePrefs();
+            msg = `${getActorName(gameWinner)} wins Game ${gameNumber} (${points.p1}–${points.p2}) and the Match (${matchGames.p1}–${matchGames.p2})!`;
+            nextBoardBtn.textContent = 'New Match';
+          } else {
+            msg = `${getActorName(gameWinner)} wins Game ${gameNumber} (${points.p1}–${points.p2})! Ready for Game ${gameNumber + 1}.`;
+            nextBoardBtn.textContent = `Start Game ${gameNumber + 1}`;
+          }
+        } else if (boardNumber >= 8 && points.p1 === points.p2) {
+          msg = `${reasonMsg} Tied ${points.p1}–${points.p2} after 8 boards — play Tie-Break Board!`;
+          nextBoardBtn.textContent = 'Tie-Break Board';
+        } else {
+          nextBoardBtn.textContent = `Next Board (${boardNumber + 1})`;
+        }
+
+        nextBoardBtn.classList.remove('hidden');
+        updateHUD(msg);
+      }
+
+      // --- Turn & Rule Evaluation ---
+      function evaluateShot() {
+        // 1. Trick Shots Evaluation
+        if (currentRuleset === 'tricks') {
+          trickShotsLeft -= 1;
+          const remaining = pieces.filter((p) => p.type !== 'striker' && !p.pocketed).length;
+          if (shotPocketed.striker) {
+            boardOver = true;
+            strikerSlider.disabled = true;
+            nextBoardBtn.textContent = 'Retry Stage';
+            nextBoardBtn.classList.remove('hidden');
+            updateHUD('Striker pocketed (Foul)! Hit Retry Stage to try again.');
+            return;
+          }
+          if (remaining === 0) {
+            boardOver = true;
+            strikerSlider.disabled = true;
+            tricksCleared += 1;
+            savePrefs();
+            nextBoardBtn.textContent = trickIndex + 1 < TRICK_LEVELS.length ? 'Next Stage' : 'Replay All';
+            nextBoardBtn.classList.remove('hidden');
+            addPopup(CENTER, CENTER - 40, 'STAGE CLEARED!', '#6ee7b7');
+            updateHUD(`Stage ${trickIndex + 1} cleared! Ready for the next puzzle.`);
+            return;
+          }
+          if (trickShotsLeft <= 0) {
+            boardOver = true;
+            strikerSlider.disabled = true;
+            nextBoardBtn.textContent = 'Retry Stage';
+            nextBoardBtn.classList.remove('hidden');
+            updateHUD('Out of shots! Hit Retry Stage to try again.');
+            return;
+          }
+          prepareNextTurnBaseline(`${trickShotsLeft} shot${trickShotsLeft === 1 ? '' : 's'} left — clear the remaining coins!`);
+          return;
+        }
+
+        // 2. Freestyle Arcade Evaluation
+        if (currentRuleset === 'freestyle') {
+          const otherPlayer = currentPlayer === 1 ? 2 : 1;
+          const actorName = getActorName(currentPlayer);
+          const pKey = currentPlayer === 1 ? 'p1' : 'p2';
+          let nextPlayer = currentPlayer;
+          let msg = '';
+
+          if (shotPocketed.striker) {
+            addPopup(striker.dropTargetX, striker.dropTargetY - 20, 'FOUL!', '#f87171');
+            nextPlayer = otherPlayer;
+            msg = `Foul! ${actorName} pocketed the striker. ${getActorName(nextPlayer)}'s turn.`;
+          } else {
+            const shotPts = shotPocketed.white * 10 + shotPocketed.black * 20;
+            if (shotPts > 0) {
+              points[pKey] += shotPts;
+              for (let i = 0; i < shotPocketed.white; i++) pocketedTrays[currentPlayer].push('white');
+              for (let i = 0; i < shotPocketed.black; i++) pocketedTrays[currentPlayer].push('black');
+            }
+            if (queenPendingPlayer === currentPlayer) {
+              if (shotPts > 0) {
+                queenOwner = currentPlayer;
+                queenPendingPlayer = null;
+                points[pKey] += 50;
+                pocketedTrays[currentPlayer].push('queen');
+                addPopup(CENTER, CENTER, 'QUEEN +50!', '#fb7185');
+                msg = `${actorName} covered the Queen (+50)! Shoot again.`;
+              } else {
+                returnPieceToBoard('queen', false);
+                queenPendingPlayer = null;
+                nextPlayer = otherPlayer;
+                msg = `Queen not covered — returned to center. ${getActorName(nextPlayer)}'s turn.`;
+              }
+            } else if (shotPocketed.queen) {
+              if (shotPts > 0) {
+                queenOwner = currentPlayer;
+                points[pKey] += 50;
+                pocketedTrays[currentPlayer].push('queen');
+                addPopup(CENTER, CENTER, 'QUEEN +50!', '#fb7185');
+                msg = `${actorName} pocketed & covered the Queen (+50)!`;
+              } else {
+                queenPendingPlayer = currentPlayer;
+                msg = `${actorName} pocketed the Queen! Sink any coin next to claim +50 pts.`;
+              }
+            } else if (shotPts > 0) {
+              msg = `${actorName} scored +${shotPts} pts! Keep shooting.`;
+            } else {
+              nextPlayer = otherPlayer;
+              msg = `${getActorName(nextPlayer)}'s turn.`;
+            }
+          }
+
+          const anyLeft = pieces.some((p) => p.type !== 'striker' && !p.pocketed);
+          if (points.p1 >= 160 || points.p2 >= 160 || !anyLeft) {
+            boardOver = true;
+            matchOver = true;
+            strikerSlider.disabled = true;
+            const winner = points.p1 >= points.p2 ? 1 : 2;
+            const wKey = winner === 1 ? 'p1' : 'p2';
+            wins[wKey] += 1;
+            savePrefs();
+            nextBoardBtn.textContent = 'New Match';
+            nextBoardBtn.classList.remove('hidden');
+            updateHUD(`${getActorName(winner)} wins Freestyle (${points.p1}–${points.p2} pts)!`);
+            return;
+          }
+
+          currentPlayer = nextPlayer;
+          prepareNextTurnBaseline(msg);
+          return;
+        }
+
+        // 3. ICF Official & Quick 1-Board Rules
+        const myColor = getPlayerColor(currentPlayer);
+        const oppColor = myColor === 'white' ? 'black' : 'white';
+        const myPocketedThisShot = shotPocketed[myColor];
+        const oppPocketedThisShot = shotPocketed[oppColor];
+        const actorName = getActorName(currentPlayer);
+        const otherPlayer = currentPlayer === 1 ? 2 : 1;
+        let nextPlayer = currentPlayer;
+        let msg = '';
+        let checkDueFor = null;
+
+        if (!breakDone) {
+          if (!shotTouchedCoin) {
+            breakAttempts += 1;
+            if (shotPocketed.striker) {
+              nextPlayer = otherPlayer;
+              msg = `Break foul: striker pocketed without touching the rack (no Due). ${getActorName(nextPlayer)}'s turn.`;
+            } else if (breakAttempts < 3) {
+              msg = `Break missed! ${actorName} gets attempt ${breakAttempts + 1} of 3.`;
+            } else {
+              nextPlayer = otherPlayer;
+              msg = `3 missed breaks — turn passes to ${getActorName(nextPlayer)}.`;
+            }
+            currentPlayer = nextPlayer;
+            prepareNextTurnBaseline(msg);
+            return;
+          }
+          breakDone = true;
+        }
+
+        const myPocketedTotalBefore =
+          pieces.filter((p) => p.type === myColor && p.pocketed).length - myPocketedThisShot;
+
+        if (shotPocketed.striker) {
+          addPopup(striker.dropTargetX, striker.dropTargetY - 20, 'DUE!', '#f87171');
+          for (let i = 0; i < myPocketedThisShot; i++) {
+            returnPieceToBoard(myColor, true);
+          }
+          if (shotPocketed.queen || queenPendingPlayer === currentPlayer) {
+            returnPieceToBoard('queen', false);
+            queenPendingPlayer = null;
+          }
+          duesPending[currentPlayer] += 1;
+
+          if (myPocketedThisShot > 0 && oppPocketedThisShot === 0) {
+            nextPlayer = currentPlayer;
+            msg = `${actorName} pocketed striker + own coin: coins returned, turn continues.`;
+          } else {
+            nextPlayer = otherPlayer;
+            msg = `Due! ${actorName} pocketed the striker. ${getActorName(nextPlayer)}'s turn.`;
+          }
+          checkDueFor = { offender: currentPlayer, beneficiary: otherPlayer };
+        } else {
+          if (myPocketedThisShot > 0 && duesPending[currentPlayer] > 0) {
+            checkDueFor = { offender: currentPlayer, beneficiary: otherPlayer };
+          }
+          for (let i = 0; i < myPocketedThisShot; i++) pocketedTrays[currentPlayer].push(myColor);
+          for (let i = 0; i < oppPocketedThisShot; i++) pocketedTrays[otherPlayer].push(oppColor);
+
+          if (queenPendingPlayer === currentPlayer) {
+            if (myPocketedThisShot > 0 && oppPocketedThisShot === 0) {
+              queenOwner = currentPlayer;
+              queenPendingPlayer = null;
+              pocketedTrays[currentPlayer].push('queen');
+              addPopup(CENTER, CENTER, 'QUEEN COVERED!', '#fb7185');
+              msg = `Queen covered by ${actorName}! Shoot again.`;
+            } else {
+              returnPieceToBoard('queen', false);
+              queenPendingPlayer = null;
+              nextPlayer = otherPlayer;
+              msg = `Queen not covered — returned to center. ${getActorName(nextPlayer)}'s turn.`;
+            }
+          } else if (shotPocketed.queen) {
+            if (myPocketedTotalBefore === 0 && myPocketedThisShot === 0) {
+              returnPieceToBoard('queen', false);
+              nextPlayer = otherPlayer;
+              msg = `Queen pocketed before any own coin — returned to center. ${getActorName(nextPlayer)}'s turn.`;
+            } else if (myPocketedTotalBefore === 0 && myPocketedThisShot === 1) {
+              queenPendingPlayer = currentPlayer;
+              msg = `${actorName} pocketed the Queen! Sink another ${myColor} coin next to cover it.`;
+            } else if (myPocketedThisShot > 0 && oppPocketedThisShot === 0) {
+              queenOwner = currentPlayer;
+              pocketedTrays[currentPlayer].push('queen');
+              addPopup(CENTER, CENTER, 'QUEEN COVERED!', '#fb7185');
+              msg = `${actorName} pocketed & covered the Queen! Shoot again.`;
+            } else if (oppPocketedThisShot > 0) {
+              returnPieceToBoard('queen', false);
+              nextPlayer = otherPlayer;
+              msg = `Opponent's coin pocketed — Queen returned & turn passes to ${getActorName(nextPlayer)}.`;
+            } else {
+              queenPendingPlayer = currentPlayer;
+              msg = `${actorName} pocketed the Queen! Sink a ${myColor} coin next to cover it.`;
+            }
+          } else if (oppPocketedThisShot > 0) {
+            nextPlayer = otherPlayer;
+            msg = `Opponent's coin pocketed — turn passes to ${getActorName(nextPlayer)}.`;
+          } else if (myPocketedThisShot > 0) {
+            msg = `Nice shot! ${actorName} keeps the turn.`;
+          } else {
+            nextPlayer = otherPlayer;
+            msg = `${getActorName(nextPlayer)}'s turn (${getPlayerColor(nextPlayer) === 'white' ? 'White' : 'Black'}).`;
+          }
+        }
+
+        const p1Left = pieces.filter((p) => p.type === getPlayerColor(1) && !p.pocketed).length;
+        const p2Left = pieces.filter((p) => p.type === getPlayerColor(2) && !p.pocketed).length;
+        const queenOnBoard = pieces.some((p) => p.type === 'queen' && !p.pocketed);
+
+        if (p1Left === 0 && p2Left === 0) {
+          if (queenOnBoard) {
+            finishBoard(otherPlayer, `Both last coins cleared while Queen was on board!`, 3);
+          } else {
+            const winner = queenOwner === 2 ? 2 : 1;
+            finishBoard(winner, `${getActorName(winner)} wins the board!`);
+          }
+          return;
+        }
+        if (p1Left === 0) {
+          if (queenOnBoard || queenPendingPlayer === 1) {
+            finishBoard(2, `Player 1 cleared last coin while Queen was on board!`, 3);
+          } else {
+            finishBoard(1, `Player 1 cleared all ${getPlayerColor(1)} coins!`);
+          }
+          return;
+        }
+        if (p2Left === 0) {
+          if (queenOnBoard || queenPendingPlayer === 2) {
+            finishBoard(1, `${getActorName(2)} cleared last coin while Queen was on board!`, 3);
+          } else {
+            finishBoard(2, `${getActorName(2)} cleared all ${getPlayerColor(2)} coins!`);
+          }
+          return;
+        }
+
+        if (checkDueFor && duesPending[checkDueFor.offender] > 0) {
+          beginDuePlacementIfReady(checkDueFor.offender, checkDueFor.beneficiary, nextPlayer, msg);
+          return;
+        }
+
+        currentPlayer = nextPlayer;
+        prepareNextTurnBaseline(msg);
+      }
+
+      // --- 240Hz Fixed-Timestep Physics Engine ---
+      function stepPhysicsFixed(dt) {
+        if (!isMoving) return;
+
+        let anyDropping = false;
+        for (const p of pieces) {
+          if (p.dropping) {
+            p.prevX = p.x;
+            p.prevY = p.y;
+            p.x += (p.dropTargetX - p.x) * Math.min(1, dt * 18);
+            p.y += (p.dropTargetY - p.y) * Math.min(1, dt * 18);
+            p.dropScale = Math.max(0, p.dropScale - dt * 9.5);
+            if (p.dropScale <= 0) {
+              p.dropping = false;
+            } else {
+              anyDropping = true;
+            }
+          }
+        }
+
+        for (const p of pieces) {
+          if (p.pocketed || p.dropping) continue;
+          p.prevX = p.x;
+          p.prevY = p.y;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+
+          if (p.x - p.r < PLAY_MIN) {
+            p.x = PLAY_MIN + p.r;
+            p.vx = Math.abs(p.vx) * 0.84;
+            const spd = Math.hypot(p.vx, p.vy);
+            if (spd > 65) playClack(spd / 1200);
+          } else if (p.x + p.r > PLAY_MAX) {
+            p.x = PLAY_MAX - p.r;
+            p.vx = -Math.abs(p.vx) * 0.84;
+            const spd = Math.hypot(p.vx, p.vy);
+            if (spd > 65) playClack(spd / 1200);
+          }
+
+          if (p.y - p.r < PLAY_MIN) {
+            p.y = PLAY_MIN + p.r;
+            p.vy = Math.abs(p.vy) * 0.84;
+            const spd = Math.hypot(p.vx, p.vy);
+            if (spd > 65) playClack(spd / 1200);
+          } else if (p.y + p.r > PLAY_MAX) {
+            p.y = PLAY_MAX - p.r;
+            p.vy = -Math.abs(p.vy) * 0.84;
+            const spd = Math.hypot(p.vx, p.vy);
+            if (spd > 65) playClack(spd / 1200);
+          }
+
+          for (const pk of POCKETS) {
+            if (Math.hypot(p.x - pk.x, p.y - pk.y) < POCKET_RADIUS - 2) {
+              p.pocketed = true;
+              p.dropping = true;
+              p.dropScale = 1;
+              p.dropTargetX = pk.x;
+              p.dropTargetY = pk.y;
+              p.vx = 0;
+              p.vy = 0;
+              playPocketSound(p.type === 'queen');
+              addRipple(pk.x, pk.y, p.type === 'queen' ? 'rgba(244,63,94,0.6)' : 'rgba(251,191,36,0.55)', 34);
+              if (currentRuleset === 'freestyle' && (p.type === 'white' || p.type === 'black')) {
+                addPopup(pk.x, pk.y - 16, p.type === 'black' ? '+20' : '+10', '#fde68a');
+              }
+              shotPocketed[p.type] = (shotPocketed[p.type] || 0) + 1;
+              if (p.type === 'queen') shotPocketed.queen = true;
+              if (p.type === 'striker') shotPocketed.striker = true;
+              anyDropping = true;
+              break;
+            }
+          }
+        }
+
+        for (let i = 0; i < pieces.length; i++) {
+          const a = pieces[i];
+          if (a.pocketed || a.dropping) continue;
+          for (let j = i + 1; j < pieces.length; j++) {
+            const b = pieces[j];
+            if (b.pocketed || b.dropping) continue;
+
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = a.r + b.r;
+
+            if (dist > 0 && dist < minDist) {
+              if (a === striker || b === striker) shotTouchedCoin = true;
+
+              const nx = dx / dist;
+              const ny = dy / dist;
+              const overlap = Math.max(0, minDist - dist - 0.02);
+              const invMassA = 1 / a.mass;
+              const invMassB = 1 / b.mass;
+              const invMassSum = invMassA + invMassB;
+
+              const corr = (overlap * 0.9) / invMassSum;
+              a.x -= nx * corr * invMassA;
+              a.y -= ny * corr * invMassA;
+              b.x += nx * corr * invMassB;
+              b.y += ny * corr * invMassB;
+
+              const rvx = b.vx - a.vx;
+              const rvy = b.vy - a.vy;
+              const velAlongNormal = rvx * nx + rvy * ny;
+              if (velAlongNormal < 0) {
+                const restitution = (a === striker || b === striker) ? 0.93 : 0.90;
+                const impulse = (-(1 + restitution) * velAlongNormal) / invMassSum;
+                a.vx -= impulse * invMassA * nx;
+                a.vy -= impulse * invMassA * ny;
+                b.vx += impulse * invMassB * nx;
+                b.vy += impulse * invMassB * ny;
+                if (Math.abs(velAlongNormal) > 55) {
+                  playClack(Math.abs(velAlongNormal) / 900);
+                  if (Math.abs(velAlongNormal) > 420) {
+                    addRipple((a.x + b.x) / 2, (a.y + b.y) / 2, 'rgba(255,255,255,0.4)', 22);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        let anyMoving = anyDropping;
+        const dragFactor = Math.exp(-VISCOUS_DRAG * dt);
+        for (const p of pieces) {
+          if (p.pocketed || p.dropping) continue;
+          p.vx *= dragFactor;
+          p.vy *= dragFactor;
+          let speed = Math.hypot(p.vx, p.vy);
+          if (speed > 0) {
+            const newSpeed = Math.max(0, speed - KINETIC_FRICTION * dt);
+            const scale = newSpeed / speed;
+            p.vx *= scale;
+            p.vy *= scale;
+            speed = newSpeed;
+          }
+          if (speed < STOP_SPEED) {
+            p.vx = 0;
+            p.vy = 0;
+          } else {
+            anyMoving = true;
+          }
+        }
+
+        if (!anyMoving) {
+          isMoving = false;
+          evaluateShot();
+        }
+      }
+
+      function stepEffects(dt) {
+        for (let i = popups.length - 1; i >= 0; i--) {
+          popups[i].y -= 36 * dt;
+          popups[i].life -= dt * 1.1;
+          if (popups[i].life <= 0) popups.splice(i, 1);
+        }
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          ripples[i].r += (ripples[i].maxR - ripples[i].r) * Math.min(1, dt * 10);
+          ripples[i].life -= dt * 2.4;
+          if (ripples[i].life <= 0) ripples.splice(i, 1);
+        }
+      }
+
+      // --- Realistic Board & Piece Rendering ---
+      function drawBoard() {
+        const cacheKey = `${currentTheme}|${currentPlayer}|${boardOver}|${matchOver}|${Boolean(duePlacement)}`;
+        if (cacheKey !== lastBoardCacheKey) {
+          lastBoardCacheKey = cacheKey;
+          renderStaticBoardTo(bctx);
+        }
+        ctx.drawImage(boardCacheCanvas, 0, 0, BOARD_SIZE, BOARD_SIZE);
+      }
+
+      function renderStaticBoardTo(tctx) {
+        const theme = THEMES[currentTheme];
+
+        const frameGrad = tctx.createLinearGradient(0, 0, BOARD_SIZE, BOARD_SIZE);
+        frameGrad.addColorStop(0, theme.frameMid);
+        frameGrad.addColorStop(0.5, theme.frameOuter);
+        frameGrad.addColorStop(1, theme.frameMid);
+        tctx.fillStyle = frameGrad;
+        tctx.fillRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+
+        tctx.strokeStyle = theme.bevelDark;
+        tctx.lineWidth = 2;
+        tctx.beginPath();
+        tctx.moveTo(0, 0);
+        tctx.lineTo(FRAME, FRAME);
+        tctx.moveTo(BOARD_SIZE, 0);
+        tctx.lineTo(BOARD_SIZE - FRAME, FRAME);
+        tctx.moveTo(0, BOARD_SIZE);
+        tctx.lineTo(FRAME, BOARD_SIZE - FRAME);
+        tctx.moveTo(BOARD_SIZE, BOARD_SIZE);
+        tctx.lineTo(BOARD_SIZE - FRAME, BOARD_SIZE - FRAME);
+        tctx.stroke();
+
+        tctx.strokeStyle = theme.bevelLight;
+        tctx.lineWidth = 3;
+        tctx.strokeRect(FRAME - 2, FRAME - 2, PLAY_SIZE + 4, PLAY_SIZE + 4);
+
+        const surfGrad = tctx.createRadialGradient(CENTER, CENTER, 30, CENTER, CENTER, PLAY_SIZE * 0.78);
+        surfGrad.addColorStop(0, theme.surfaceInner);
+        surfGrad.addColorStop(0.65, theme.surfaceMid);
+        surfGrad.addColorStop(1, theme.surfaceOuter);
+        tctx.fillStyle = surfGrad;
+        tctx.fillRect(PLAY_MIN, PLAY_MIN, PLAY_SIZE, PLAY_SIZE);
+
+        const pattern = getSurfacePattern(currentTheme);
+        if (pattern) {
+          tctx.fillStyle = pattern;
+          tctx.fillRect(PLAY_MIN, PLAY_MIN, PLAY_SIZE, PLAY_SIZE);
+        }
+
+        tctx.save();
+        tctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+        tctx.lineWidth = 8;
+        tctx.strokeRect(PLAY_MIN + 2, PLAY_MIN + 2, PLAY_SIZE - 4, PLAY_SIZE - 4);
+        tctx.restore();
+
+        tctx.save();
+        tctx.strokeStyle = theme.mandala;
+        tctx.lineWidth = 1.4;
+        for (let k = 0; k < 8; k++) {
+          const a = (k * Math.PI) / 4;
+          tctx.beginPath();
+          tctx.moveTo(CENTER + Math.cos(a) * (CENTRE_CIRCLE_R + 2), CENTER + Math.sin(a) * (CENTRE_CIRCLE_R + 2));
+          tctx.lineTo(CENTER + Math.cos(a) * (OUTER_CIRCLE_R - 4), CENTER + Math.sin(a) * (OUTER_CIRCLE_R - 4));
+          tctx.stroke();
+        }
+        tctx.restore();
+
+        tctx.strokeStyle = theme.circle;
+        tctx.lineWidth = 2.6;
+        tctx.beginPath();
+        tctx.arc(CENTER, CENTER, OUTER_CIRCLE_R, 0, Math.PI * 2);
+        tctx.stroke();
+
+        if (duePlacement) {
+          tctx.save();
+          tctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
+          tctx.strokeStyle = '#f59e0b';
+          tctx.lineWidth = 3.5;
+          tctx.setLineDash([7, 5]);
+          tctx.beginPath();
+          tctx.arc(CENTER, CENTER, OUTER_CIRCLE_R, 0, Math.PI * 2);
+          tctx.fill();
+          tctx.stroke();
+          tctx.restore();
+        }
+
+        tctx.fillStyle = theme.circleFill;
+        tctx.beginPath();
+        tctx.arc(CENTER, CENTER, CENTRE_CIRCLE_R, 0, Math.PI * 2);
+        tctx.fill();
+        tctx.stroke();
+
+        tctx.strokeStyle = theme.foulLine;
+        tctx.lineWidth = 1.8;
+        for (const pk of POCKETS) {
+          const dirX = pk.x < CENTER ? -1 : 1;
+          const dirY = pk.y < CENTER ? -1 : 1;
+          const startX = CENTER + dirX * 98;
+          const startY = CENTER + dirY * 98;
+          const endX = pk.x - dirX * 46;
+          const endY = pk.y - dirY * 46;
+
+          tctx.beginPath();
+          tctx.moveTo(startX, startY);
+          tctx.lineTo(endX, endY);
+          tctx.stroke();
+
+          const angleToPocket = Math.atan2(pk.y - CENTER, pk.x - CENTER);
+          tctx.beginPath();
+          tctx.arc(endX, endY, 16, angleToPocket - 1.1, angleToPocket + 1.1);
+          tctx.stroke();
+        }
+
+        drawBaselineOn(tctx, CENTER, BOTTOM_BASELINE_Y, 0, currentPlayer === 1 && !boardOver && !matchOver && !duePlacement, theme);
+        drawBaselineOn(tctx, CENTER, TOP_BASELINE_Y, 0, currentPlayer === 2 && !boardOver && !matchOver && !duePlacement, theme);
+        drawBaselineOn(tctx, FRAME + 96, CENTER, Math.PI / 2, false, theme);
+        drawBaselineOn(tctx, BOARD_SIZE - FRAME - 96, CENTER, Math.PI / 2, false, theme);
+
+        for (const pk of POCKETS) {
+          tctx.save();
+          const pkGrad = tctx.createRadialGradient(pk.x - 4, pk.y - 4, 4, pk.x, pk.y, POCKET_RADIUS);
+          pkGrad.addColorStop(0, '#000000');
+          pkGrad.addColorStop(0.75, theme.pocket);
+          pkGrad.addColorStop(1, theme.pocketRim);
+          tctx.fillStyle = pkGrad;
+          tctx.beginPath();
+          tctx.arc(pk.x, pk.y, POCKET_RADIUS, 0, Math.PI * 2);
+          tctx.fill();
+
+          tctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          tctx.lineWidth = 1;
+          tctx.beginPath();
+          tctx.arc(pk.x, pk.y, POCKET_RADIUS * 0.65, 0, Math.PI * 2);
+          tctx.moveTo(pk.x - POCKET_RADIUS * 0.7, pk.y);
+          tctx.lineTo(pk.x + POCKET_RADIUS * 0.7, pk.y);
+          tctx.moveTo(pk.x, pk.y - POCKET_RADIUS * 0.7);
+          tctx.lineTo(pk.x, pk.y + POCKET_RADIUS * 0.7);
+          tctx.stroke();
+
+          tctx.strokeStyle = theme.pocketRim;
+          tctx.lineWidth = 3;
+          tctx.beginPath();
+          tctx.arc(pk.x, pk.y, POCKET_RADIUS, 0, Math.PI * 2);
+          tctx.stroke();
+          tctx.restore();
+        }
+      }
+
+      function drawBaselineOn(tctx, cx, cy, rot, active, theme) {
+        tctx.save();
+        tctx.translate(cx, cy);
+        tctx.rotate(rot);
+
+        tctx.strokeStyle = active ? theme.baselineActive : theme.baselineIdle;
+        tctx.lineWidth = active ? 2.6 : 1.6;
+
+        tctx.beginPath();
+        tctx.moveTo(-BASELINE_HALF, -12);
+        tctx.lineTo(BASELINE_HALF, -12);
+        tctx.moveTo(-BASELINE_HALF, 12);
+        tctx.lineTo(BASELINE_HALF, 12);
+        tctx.stroke();
+
+        for (const ex of [-BASELINE_HALF, BASELINE_HALF]) {
+          tctx.fillStyle = active ? theme.baseCircleFill : '#991b1b';
+          tctx.beginPath();
+          tctx.arc(ex, 0, 12, 0, Math.PI * 2);
+          tctx.fill();
+          tctx.stroke();
+        }
+        tctx.restore();
+      }
+
+      function drawPiece(p, alpha = 1) {
+        if (!p || (p.pocketed && !p.dropping)) return;
+        const palette = p.type === 'striker' ? STRIKER_THEMES[currentStrikerTheme] : PIECE_THEMES[currentPieceTheme][p.type];
+        const rx = isMoving ? p.prevX + (p.x - p.prevX) * alpha : p.x;
+        const ry = isMoving ? p.prevY + (p.y - p.prevY) * alpha : p.y;
+        const rr = p.r * (p.dropping ? p.dropScale : 1);
+        if (rr <= 0.5) return;
+
+        ctx.save();
+        if (p.dropping) ctx.globalAlpha = Math.max(0.2, p.dropScale);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
+        ctx.beginPath();
+        ctx.arc(rx + 2.5 * (rr / p.r), ry + 3.5 * (rr / p.r), rr, 0, Math.PI * 2);
+        ctx.fill();
+
+        const grad = ctx.createRadialGradient(rx - rr * 0.32, ry - rr * 0.32, rr * 0.1, rx, ry, rr);
+        if (p === striker && strikerBlocked) {
+          grad.addColorStop(0, '#fca5a5');
+          grad.addColorStop(0.6, '#ef4444');
+          grad.addColorStop(1, '#991b1b');
+        } else {
+          grad.addColorStop(0, palette.light);
+          grad.addColorStop(0.65, palette.mid);
+          grad.addColorStop(1, palette.dark);
+        }
+
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = p === striker && strikerBlocked ? '#7f1d1d' : palette.stroke;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(rx, ry, rr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = palette.ring;
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.arc(rx, ry, rr * 0.68, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(rx, ry, rr * 0.36, 0, Math.PI * 2);
+        ctx.stroke();
+
+        if (p.type === 'striker' && !strikerBlocked) {
+          ctx.strokeStyle = palette.ring;
+          ctx.lineWidth = 1.1;
+          for (let k = 0; k < 4; k++) {
+            const a = (k * Math.PI) / 2;
+            ctx.beginPath();
+            ctx.moveTo(rx + Math.cos(a) * 3, ry + Math.sin(a) * 3);
+            ctx.lineTo(rx + Math.cos(a) * (rr * 0.58), ry + Math.sin(a) * (rr * 0.58));
+            ctx.stroke();
+          }
+        }
+        if (palette.glossy || p.type === 'striker') {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+          ctx.beginPath();
+          ctx.ellipse(rx - rr * 0.28, ry - rr * 0.28, rr * 0.32, rr * 0.18, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (p === striker && strikerBlocked && !isMoving) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.arc(rx, ry, rr + 7, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawEffects() {
+        for (const r of ripples) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, r.life);
+          ctx.strokeStyle = r.color;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+        for (const pop of popups) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, pop.life);
+          ctx.font = 'bold 20px Inter, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillText(pop.text, pop.x + 1.5, pop.y + 1.5);
+          ctx.fillStyle = pop.color;
+          ctx.fillText(pop.text, pop.x, pop.y);
+          ctx.restore();
+        }
+      }
+
+      function drawAimGuide() {
+        let nx, ny, clamped;
+        if (isAiming) {
+          const dx = striker.x - aimPoint.x;
+          const dy = striker.y - aimPoint.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist <= 14) return;
+          clamped = Math.min(dist, MAX_PULL);
+          nx = dx / dist;
+          ny = dy / dist;
+        } else if (kbAiming && !isMoving && !boardOver && !matchOver && !isBotTurn() && !isRemoteTurn() && !duePlacement) {
+          clamped = kbPower;
+          nx = Math.cos(kbAngle);
+          ny = Math.sin(kbAngle);
+        } else {
+          return;
+        }
+
+        const powerRatio = clamped / MAX_PULL;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(striker.x, striker.y);
+        ctx.lineTo(striker.x - nx * clamped, striker.y - ny * clamped);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(220, 38, 38, ${0.45 + powerRatio * 0.5})`;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(striker.x, striker.y);
+        ctx.lineTo(striker.x + nx * (90 + powerRatio * 220), striker.y + ny * (90 + powerRatio * 220));
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.strokeStyle = powerRatio > 0.75 ? '#ef4444' : '#f59e0b';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(striker.x, striker.y, STRIKER_R + 8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * powerRatio);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function draw(alpha = 1) {
+        drawBoard();
+        for (const p of pieces) {
+          if (p !== striker) drawPiece(p, alpha);
+        }
+        drawAimGuide();
+        if (striker && !boardOver && !matchOver && !duePlacement) drawPiece(striker, alpha);
+        drawEffects();
+      }
+
+      function loop(timestamp) {
+        animId = requestAnimationFrame(loop);
+        if (!lastFrameTime) lastFrameTime = timestamp;
+        let frameDt = Math.min((timestamp - lastFrameTime) / 1000, 0.05);
+        for (const hz of [60, 90, 120, 144, 240]) {
+          const target = 1 / hz;
+          if (Math.abs(frameDt - target) < 0.002) {
+            frameDt = target;
+            break;
+          }
+        }
+        lastFrameTime = timestamp;
+
+        if (isMoving) {
+          physicsAccumulator += frameDt;
+          let steps = 0;
+          while (physicsAccumulator >= FIXED_DT && steps < 16) {
+            stepPhysicsFixed(FIXED_DT);
+            physicsAccumulator -= FIXED_DT;
+            steps++;
+          }
+          if (!isMoving) physicsAccumulator = 0;
+        } else {
+          physicsAccumulator = 0;
+        }
+
+        if (popups.length || ripples.length) {
+          stepEffects(frameDt);
+        }
+
+        const alpha = isMoving ? physicsAccumulator / FIXED_DT : 1;
+        draw(alpha);
+      }
+
+      function connectOnline(action, code = '') {
+        if (!location.host || location.protocol === 'file:' || location.protocol === 'about:') {
+          onlineStatusEl.textContent = 'Offline / standalone preview — run the included Node.js server (npm start) to host live 1v1 rooms!';
+          return;
+        }
+        try {
+          if (ws) ws.close();
+          const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+          ws = new WebSocket(`${proto}//${location.host}`);
+          onlineStatusEl.textContent = 'Connecting to room server...';
+          ws.onopen = () => {
+            ws.send(JSON.stringify({ type: action, room: code.toUpperCase() }));
+          };
+          ws.onmessage = (ev) => {
+            const msg = JSON.parse(ev.data);
+            if (msg.type === 'room_created') {
+              onlineRoomCode = msg.room;
+              onlineSeat = 1;
+              onlineStatusEl.textContent = `Room ${msg.room} created! Waiting for opponent to join...`;
+              copyInviteBtn.classList.remove('hidden');
+              leaveRoomBtn.classList.remove('hidden');
+            } else if (msg.type === 'room_joined') {
+              onlineRoomCode = msg.room;
+              onlineSeat = msg.seat;
+              gameMode = 'online';
+              currentRuleset = 'icf';
+              leaveRoomBtn.classList.remove('hidden');
+              onlineStatusEl.textContent = `Connected to room ${msg.room} as Player ${msg.seat}!`;
+              if (msg.ready) {
+                onlineModal.classList.add('hidden');
+                onlineModal.classList.remove('flex');
+                startNewMatch();
+              }
+            } else if (msg.type === 'opponent_joined') {
+              onlineModal.classList.add('hidden');
+              onlineModal.classList.remove('flex');
+              startNewMatch();
+            } else if (msg.type === 'shot') {
+              striker.x = msg.sx;
+              striker.prevX = msg.sx;
+              striker.y = getActiveBaselineY();
+              striker.prevY = striker.y;
+              striker.vx = msg.vx;
+              striker.vy = msg.vy;
+              shotPocketed = { white: 0, black: 0, queen: false, striker: false };
+              shotTouchedCoin = false;
+              isMoving = true;
+              playClack(0.7);
+              updateHUD("Opponent's shot in play...");
+            } else if (msg.type === 'error') {
+              onlineStatusEl.textContent = msg.message || 'Room error.';
+            } else if (msg.type === 'opponent_left') {
+              updateHUD('Opponent disconnected from the room.');
+            }
+          };
+          ws.onerror = () => {
+            onlineStatusEl.textContent = 'Could not connect to room server. Make sure server.js is running.';
+          };
+        } catch (_) {
+          onlineStatusEl.textContent = 'WebSocket unavailable in this preview.';
+        }
+      }
+
+      onlineBtn.addEventListener('click', () => {
+        onlineModal.classList.remove('hidden');
+        onlineModal.classList.add('flex');
+      });
+      closeOnlineBtn.addEventListener('click', () => {
+        onlineModal.classList.add('hidden');
+        onlineModal.classList.remove('flex');
+      });
+      onlineModal.addEventListener('click', (e) => {
+        if (e.target === onlineModal) {
+          onlineModal.classList.add('hidden');
+          onlineModal.classList.remove('flex');
+        }
+      });
+      createRoomBtn.addEventListener('click', () => connectOnline('create'));
+      joinRoomBtn.addEventListener('click', () => {
+        const code = roomCodeInput.value.trim().toUpperCase();
+        if (code.length >= 4) connectOnline('join', code);
+      });
+      copyInviteBtn.addEventListener('click', () => {
+        if (!onlineRoomCode) return;
+        const url = `${location.origin}${location.pathname}?room=${onlineRoomCode}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).catch(() => {});
+        } else {
+          const tmp = document.createElement('input');
+          tmp.value = url;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+        }
+        copyInviteBtn.textContent = 'Copied!';
+        setTimeout(() => { copyInviteBtn.textContent = 'Copy Link'; }, 1500);
+      });
+      leaveRoomBtn.addEventListener('click', () => {
+        if (ws) ws.close();
+        ws = null;
+        onlineRoomCode = null;
+        gameMode = 'bot';
+        copyInviteBtn.classList.add('hidden');
+        leaveRoomBtn.classList.add('hidden');
+        onlineModal.classList.add('hidden');
+        onlineModal.classList.remove('flex');
+        startNewMatch();
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+      if (window.ResizeObserver) {
+        new ResizeObserver(() => { if (striker) resizeCanvas(); }).observe(boardWrap);
+      }
+      window.onload = () => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+        if (animId) cancelAnimationFrame(animId);
+        loadPrefs();
+        startNewMatch();
+        try {
+          const params = new URLSearchParams(location.search);
+          const r = params.get('room');
+          if (r) {
+            roomCodeInput.value = r.toUpperCase();
+            onlineModal.classList.remove('hidden');
+            onlineModal.classList.add('flex');
+            connectOnline('join', r);
+          }
+        } catch (_) {}
+        resizeCanvas();
+        lastFrameTime = 0;
+        animId = requestAnimationFrame(loop);
+      };
+    })();
+  </script>
+</body>
+</html>
