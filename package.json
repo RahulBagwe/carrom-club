@@ -1,0 +1,12 @@
+{
+  "name": "carrom-club",
+  "version": "2.0.0",
+  "description": "Chess.com-inspired Carrom web app with ICF rules, PWA support, and 1v1 WebSocket rooms",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
