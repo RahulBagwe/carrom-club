@@ -3,9 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#1c1917" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <title>Carrom Club — ICF, 4P Doubles &amp; Trick Shots</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,7 +11,8 @@
   <style>
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at top, #292524 0%, #141210 70%);
+      background-color: #0b0f19;
+      background-image: linear-gradient(180deg, #172033 0%, #0b0f19 55%, #06080f 100%);
       color: #f5f5f4;
       overscroll-behavior: none;
     }
@@ -24,7 +22,30 @@
       -webkit-user-select: none;
     }
     input[type="range"] {
-      accent-color: #d97706;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      height: 8px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      border: 2px solid #fef3c7;
+      box-shadow: 0 2px 10px rgba(217, 119, 6, 0.55);
+      cursor: pointer;
+      transition: transform 120ms ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.12);
+    }
+    input[type="range"]:disabled {
+      opacity: 0.45;
     }
     .modal-panel {
       animation: modalIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -71,14 +92,14 @@
 
     <!-- Symmetrical 3-Column Scoreboard -->
     <div class="w-full grid grid-cols-3 gap-2">
-      <div id="p1Card" class="rounded-2xl p-2.5 border transition-all duration-300 bg-stone-900/90 border-amber-500/70">
+      <div id="p1Card" class="rounded-2xl p-2.5 border transition-colors duration-150 bg-stone-900/90 border-amber-500/70">
         <div class="flex items-center justify-between gap-1">
           <span id="p1Label" class="text-xs font-semibold text-amber-100 truncate">P1 · White</span>
           <span id="p1ColorDot" class="w-3 h-3 rounded-full bg-[#faf3e0] border border-stone-400 shrink-0"></span>
         </div>
         <div class="flex items-baseline justify-between mt-1">
-          <span id="p1Score" class="text-base font-bold text-white">0 / 9</span>
-          <span id="p1Points" class="text-xs text-amber-300 font-semibold">0 pts</span>
+          <span id="p1Score" class="text-base font-bold text-white tabular-nums">0 / 9</span>
+          <span id="p1Points" class="text-xs text-amber-300 font-semibold tabular-nums">0 pts</span>
         </div>
         <div id="p1Tray" class="flex flex-wrap gap-1 mt-1.5 min-h-[10px]"></div>
         <div class="flex items-center justify-between mt-1 text-[10px] text-stone-400">
@@ -94,14 +115,14 @@
         <span id="gamesScore" class="text-[10px] font-medium text-stone-400 mt-1">Games: 0 - 0</span>
       </div>
 
-      <div id="p2Card" class="rounded-2xl p-2.5 border transition-all duration-300 bg-stone-900/60 border-stone-800">
+      <div id="p2Card" class="rounded-2xl p-2.5 border transition-colors duration-150 bg-stone-900/60 border-stone-800">
         <div class="flex items-center justify-between gap-1">
           <span id="p2Label" class="text-xs font-semibold text-stone-200 truncate">Bot · Black</span>
           <span id="p2ColorDot" class="w-3 h-3 rounded-full bg-stone-800 border border-stone-500 shrink-0"></span>
         </div>
         <div class="flex items-baseline justify-between mt-1">
-          <span id="p2Score" class="text-base font-bold text-white">0 / 9</span>
-          <span id="p2Points" class="text-xs text-amber-300 font-semibold">0 pts</span>
+          <span id="p2Score" class="text-base font-bold text-white tabular-nums">0 / 9</span>
+          <span id="p2Points" class="text-xs text-amber-300 font-semibold tabular-nums">0 pts</span>
         </div>
         <div id="p2Tray" class="flex flex-wrap gap-1 mt-1.5 min-h-[10px]"></div>
         <div class="flex items-center justify-between mt-1 text-[10px] text-stone-400">
@@ -112,26 +133,61 @@
     </div>
 
     <!-- Board Container -->
-    <div id="boardWrap" class="w-full max-w-[min(540px,56dvh)] sm:max-w-[min(540px,62dvh)] aspect-square rounded-2xl shadow-2xl overflow-hidden bg-stone-950 border border-stone-800 flex items-center justify-center">
+    <div id="boardWrap" class="w-full max-w-[min(540px,56dvh)] sm:max-w-[min(540px,62dvh)] aspect-square rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden bg-stone-950 flex items-center justify-center">
       <canvas id="carromCanvas" class="w-full h-full block"></canvas>
     </div>
 
-    <!-- Symmetrical Bottom Control Dock -->
-    <div class="w-full bg-stone-900/90 border border-stone-800 rounded-2xl p-3 flex flex-col gap-2.5">
-      <div class="flex items-center gap-3">
-        <label for="strikerSlider" class="text-xs font-medium text-stone-300 whitespace-nowrap">Striker</label>
-        <input id="strikerSlider" type="range" min="-1" max="1" step="0.01" value="0" class="w-full h-2 rounded-lg cursor-pointer" />
-      </div>
-      <div class="flex items-center justify-between gap-2 text-xs text-stone-400">
-        <span id="statusText" class="leading-snug">Player 1 breaks (White) — slide to position, pull back to shoot!</span>
-        <div class="flex items-center gap-2 shrink-0">
-          <button id="foregoDueBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-stone-700 hover:bg-stone-600 text-amber-200 transition">
-            Forego Due
+    <!-- Stateful Symmetrical Bottom Control Dock -->
+    <div class="w-full bg-stone-900/90 border border-white/10 rounded-2xl p-3 shadow-lg">
+      <!-- State A: Active Play / Due Placement -->
+      <div id="activePlayDock" class="flex flex-col gap-2.5">
+        <div id="sliderRow" class="flex items-center gap-3">
+          <label for="strikerSlider" class="text-xs font-semibold text-stone-300 whitespace-nowrap">Striker</label>
+          <input id="strikerSlider" type="range" min="-1" max="1" step="0.01" value="0" class="w-full h-2 rounded-lg cursor-pointer" />
+        </div>
+        <!-- Precision Due Placement Joystick (visible ONLY during Due placement) -->
+        <div id="dueJoystickRow" class="hidden items-center justify-between gap-3 py-1 px-2 rounded-xl bg-stone-950/70 border border-amber-500/30">
+          <div class="flex items-center gap-3 min-w-0">
+            <div id="dueJoystickPad" class="relative w-14 h-14 rounded-full bg-stone-800 border-2 border-amber-500/50 shadow-inner flex items-center justify-center shrink-0 touch-none select-none cursor-grab active:cursor-grabbing">
+              <div class="w-8 h-8 rounded-full border border-white/10 pointer-events-none"></div>
+              <div id="dueJoystickKnob" class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-300 to-amber-600 border-2 border-amber-100 shadow-md pointer-events-none"></div>
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-amber-200 truncate">Align Due Coin</div>
+              <div class="text-[11px] text-stone-400 leading-tight">Drag joystick to fine-tune position inside Outer Circle</div>
+            </div>
+          </div>
+          <button id="confirmDueBtn" type="button" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-950/50 shrink-0 transition">
+            Place Coin
           </button>
-          <button id="nextBoardBtn" type="button" class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition">
+        </div>
+        <div class="flex items-center justify-between gap-2 text-xs text-stone-300">
+          <span id="statusText" class="leading-snug">Player 1 breaks (White) — slide to position, pull back to shoot!</span>
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="foregoDueBtn" type="button" class="hidden px-3 py-1 rounded-xl text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition">
+              Forego Due
+            </button>
+            <button id="passTurnBtn" type="button" title="Pass turn (ICF Law 124: 3 consecutive passes each replays board)" class="px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-stone-800 hover:bg-stone-700 border border-white/10 text-stone-300 transition">
+              Pass
+            </button>
+            <span id="pocketCount" class="px-2 py-0.5 rounded-lg bg-stone-800 border border-white/5 font-semibold text-amber-300 tabular-nums whitespace-nowrap">0 / 19</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- State B: Post-Round Board Inspection Bar (shown when viewing board after Round Result modal) -->
+      <div id="postRoundDock" class="hidden items-center justify-between gap-2.5">
+        <div class="min-w-0">
+          <div id="postRoundTitle" class="text-xs font-bold text-amber-200 truncate">Round 1 Complete</div>
+          <div id="postRoundSub" class="text-[11px] text-stone-400 truncate">Inspecting final board position</div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="reopenResultBtn" type="button" class="px-3 py-2 rounded-xl text-xs font-semibold bg-stone-800 hover:bg-stone-700 border border-white/10 text-stone-200 transition">
+            Scorecard
+          </button>
+          <button id="nextBoardBtn" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-md shadow-amber-900/30 transition">
             Next Board
           </button>
-          <span id="pocketCount" class="font-medium text-amber-300 whitespace-nowrap">0 / 19</span>
         </div>
       </div>
     </div>
@@ -261,8 +317,33 @@
           • <strong>Trick Shots:</strong> 6 verified solo puzzle stages!
         </p>
         <p><strong class="text-amber-300">Break &amp; Placement:</strong> Whoever breaks plays White (White Y points at them). The striker cannot overlap any coin on the baseline and must either cover a red Base Circle completely or stay clear.</p>
-        <p><strong class="text-amber-300">Dues &amp; Queen:</strong> Pocketing the striker incurs 1 Due. In ICF/Quick, pocket 1 own coin before claiming the Queen, cover her on the same or next stroke, and never clear your last coin while the Queen is still on the board.</p>
+        <p><strong class="text-amber-300">Official ICF Dues &amp; Queen Laws (Laws 56–104):</strong><br />
+          • <strong>Striker + Coins (Laws 56–60):</strong> Striker alone = 1 Due &amp; lose turn. Striker + own coin (with or without opponent coin) = own coin(s) + 1 Due returned &amp; <strong>turn continues</strong>.<br />
+          • <strong>Queen Eligibility &amp; Break Cover (Laws 79–92):</strong> Must have ≥1 own coin pocketed (or a recovered Due, Law 84) and 0 unrecovered Dues (Law 83) to claim Queen. If all 9 coins are on the board, pocketing Queen + 1 own coin requires covering on the next stroke; Queen + 2 own coins covers immediately (Law 88). While covering Queen, Striker + own coin returns the coin + 1 Due and continues turn to cover (Law 92).<br />
+          • <strong>Last-Coin Laws (Laws 93–102):</strong> Clearing your last coin (or opponent's last coin) while Queen is unsettled loses the board (3 pts, or 1 pt at 22+), plus +1 penalty point if the Striker was also pocketed.<br />
+          • <strong>Due Placement &amp; General (Laws 30, 104, 115, 124):</strong> 15s shot/placement timer in ICF mode; Due coins cannot form a direct pocket-aligned Pair/Cannon with the Queen (Law 104); a striker slip that stays within the baselines without touching a coin is retaken (Law 115); 3 consecutive passes by each player replays the board (Law 124).
+        </p>
         <p><strong class="text-amber-300">Controls:</strong> Touch/Mouse drag-back on the striker, or Keyboard (<kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">←</kbd><kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">→</kbd> slide, <kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">A</kbd><kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">D</kbd> aim, <kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">↑</kbd><kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">↓</kbd> power, <kbd class="px-1 py-0.5 rounded bg-stone-800 border border-stone-700">Space</kbd> shoot).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Round / Match Result Modal -->
+  <div id="resultModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 p-4">
+    <div class="modal-panel w-full max-w-sm rounded-3xl bg-stone-900/95 border border-white/15 p-6 shadow-2xl text-center">
+      <div id="resultBadge" class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl">
+        🏆
+      </div>
+      <h2 id="resultTitle" class="text-lg font-bold text-white">Round 1 Complete</h2>
+      <p id="resultDesc" class="text-xs text-stone-300 mt-1.5 leading-relaxed"></p>
+      <div id="resultScorePill" class="mt-3 py-2 px-3 rounded-xl bg-stone-800/80 border border-white/10 text-xs font-semibold text-amber-200 tabular-nums"></div>
+      <div class="mt-5 flex flex-col gap-2">
+        <button id="resultNextBtn" type="button" class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-900/40 transition">
+          Continue to Round 2 →
+        </button>
+        <button id="resultDismissBtn" type="button" class="w-full py-2 px-4 rounded-xl text-xs font-medium bg-stone-800 hover:bg-stone-700 text-stone-300 transition">
+          View Board
+        </button>
       </div>
     </div>
   </div>
@@ -306,7 +387,25 @@
       const closeRulesBtn = document.getElementById('closeRulesBtn');
       const rulesModal = document.getElementById('rulesModal');
       const nextBoardBtn = document.getElementById('nextBoardBtn');
+      const activePlayDock = document.getElementById('activePlayDock');
+      const sliderRow = document.getElementById('sliderRow');
+      const postRoundDock = document.getElementById('postRoundDock');
+      const postRoundTitle = document.getElementById('postRoundTitle');
+      const postRoundSub = document.getElementById('postRoundSub');
+      const reopenResultBtn = document.getElementById('reopenResultBtn');
+      const resultModal = document.getElementById('resultModal');
+      const resultBadge = document.getElementById('resultBadge');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultDesc = document.getElementById('resultDesc');
+      const resultScorePill = document.getElementById('resultScorePill');
+      const resultNextBtn = document.getElementById('resultNextBtn');
+      const resultDismissBtn = document.getElementById('resultDismissBtn');
       const foregoDueBtn = document.getElementById('foregoDueBtn');
+      const dueJoystickRow = document.getElementById('dueJoystickRow');
+      const dueJoystickPad = document.getElementById('dueJoystickPad');
+      const dueJoystickKnob = document.getElementById('dueJoystickKnob');
+      const confirmDueBtn = document.getElementById('confirmDueBtn');
+      const passTurnBtn = document.getElementById('passTurnBtn');
       const statusText = document.getElementById('statusText');
       const matchMeta = document.getElementById('matchMeta');
       const pocketCountEl = document.getElementById('pocketCount');
@@ -370,7 +469,7 @@
           frameOuter: '#2d150c', frameMid: '#4e2718', frameInner: '#361a0f',
           bevelLight: 'rgba(255, 224, 185, 0.16)', bevelDark: 'rgba(0, 0, 0, 0.45)',
           surfaceInner: '#f6e1b8', surfaceMid: '#edd09b', surfaceOuter: '#dfb877',
-          grainColor: 'rgba(139, 90, 43, 0.085)', circle: '#7f1d1d', circleFill: 'rgba(153, 27, 27, 0.14)',
+          grainColor: 'rgba(120, 72, 30, 0.16)', circle: '#7f1d1d', circleFill: 'rgba(153, 27, 27, 0.14)',
           mandala: 'rgba(127, 29, 29, 0.18)', foulLine: 'rgba(45, 25, 14, 0.6)',
           baselineActive: '#9a3412', baselineIdle: 'rgba(43, 26, 18, 0.45)', baseCircleFill: '#b91c1c',
           pocket: '#0c0907', pocketRim: '#28140b'
@@ -380,7 +479,7 @@
           frameOuter: '#1c0a06', frameMid: '#3a1810', frameInner: '#240e09',
           bevelLight: 'rgba(254, 215, 170, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.5)',
           surfaceInner: '#e7c697', surfaceMid: '#d6ad78', surfaceOuter: '#be8e54',
-          grainColor: 'rgba(92, 46, 20, 0.1)', circle: '#7c2d12', circleFill: 'rgba(124, 45, 18, 0.15)',
+          grainColor: 'rgba(82, 38, 16, 0.17)', circle: '#7c2d12', circleFill: 'rgba(124, 45, 18, 0.15)',
           mandala: 'rgba(124, 45, 18, 0.2)', foulLine: 'rgba(56, 28, 14, 0.6)',
           baselineActive: '#b45309', baselineIdle: 'rgba(56, 28, 14, 0.45)', baseCircleFill: '#b91c1c',
           pocket: '#090504', pocketRim: '#240e09'
@@ -390,7 +489,7 @@
           frameOuter: '#36270e', frameMid: '#594218', frameInner: '#423011',
           bevelLight: 'rgba(254, 240, 138, 0.18)', bevelDark: 'rgba(0, 0, 0, 0.42)',
           surfaceInner: '#fef3c7', surfaceMid: '#f7e199', surfaceOuter: '#e6c66a',
-          grainColor: 'rgba(146, 108, 30, 0.08)', circle: '#92400e', circleFill: 'rgba(146, 64, 14, 0.12)',
+          grainColor: 'rgba(130, 92, 22, 0.15)', circle: '#92400e', circleFill: 'rgba(146, 64, 14, 0.12)',
           mandala: 'rgba(146, 64, 14, 0.18)', foulLine: 'rgba(92, 64, 16, 0.55)',
           baselineActive: '#b45309', baselineIdle: 'rgba(92, 64, 16, 0.4)', baseCircleFill: '#dc2626',
           pocket: '#0d0904', pocketRim: '#36270e'
@@ -400,7 +499,7 @@
           frameOuter: '#17110d', frameMid: '#2e221b', frameInner: '#1f1712',
           bevelLight: 'rgba(214, 211, 209, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.55)',
           surfaceInner: '#bfa07a', surfaceMid: '#a98760', surfaceOuter: '#8c6b46',
-          grainColor: 'rgba(55, 38, 22, 0.12)', circle: '#fef3c7', circleFill: 'rgba(254, 243, 199, 0.12)',
+          grainColor: 'rgba(42, 26, 14, 0.19)', circle: '#fef3c7', circleFill: 'rgba(254, 243, 199, 0.12)',
           mandala: 'rgba(254, 243, 199, 0.18)', foulLine: 'rgba(254, 243, 199, 0.45)',
           baselineActive: '#f59e0b', baselineIdle: 'rgba(254, 243, 199, 0.35)', baseCircleFill: '#dc2626',
           pocket: '#070504', pocketRim: '#1f1712'
@@ -410,7 +509,7 @@
           frameOuter: '#220808', frameMid: '#451212', frameInner: '#2e0b0b',
           bevelLight: 'rgba(254, 202, 202, 0.14)', bevelDark: 'rgba(0, 0, 0, 0.5)',
           surfaceInner: '#e6b89c', surfaceMid: '#d49d7e', surfaceOuter: '#b87a58',
-          grainColor: 'rgba(102, 34, 24, 0.1)', circle: '#7f1d1d', circleFill: 'rgba(127, 29, 29, 0.15)',
+          grainColor: 'rgba(90, 26, 18, 0.17)', circle: '#7f1d1d', circleFill: 'rgba(127, 29, 29, 0.15)',
           mandala: 'rgba(127, 29, 29, 0.2)', foulLine: 'rgba(69, 18, 18, 0.58)',
           baselineActive: '#991b1b', baselineIdle: 'rgba(69, 18, 18, 0.42)', baseCircleFill: '#b91c1c',
           pocket: '#090303', pocketRim: '#2e0b0b'
@@ -490,7 +589,7 @@
           frameOuter: '#2e100a', frameMid: '#592014', frameInner: '#3d150d',
           bevelLight: 'rgba(254, 215, 170, 0.16)', bevelDark: 'rgba(0, 0, 0, 0.46)',
           surfaceInner: '#f7d9c4', surfaceMid: '#ecc1a5', surfaceOuter: '#dba17e',
-          grainColor: 'rgba(124, 45, 18, 0.08)', circle: '#881337', circleFill: 'rgba(136, 19, 55, 0.12)',
+          grainColor: 'rgba(110, 36, 14, 0.15)', circle: '#881337', circleFill: 'rgba(136, 19, 55, 0.12)',
           mandala: 'rgba(136, 19, 55, 0.18)', foulLine: 'rgba(80, 28, 18, 0.55)',
           baselineActive: '#be123c', baselineIdle: 'rgba(80, 28, 18, 0.4)', baseCircleFill: '#e11d48',
           pocket: '#0d0504', pocketRim: '#3d150d'
@@ -689,6 +788,30 @@
       const bctx = boardCacheCanvas.getContext('2d');
       let lastBoardCacheKey = '';
 
+      const frameTextureCache = {};
+      function getFramePattern(themeKey) {
+        if (frameTextureCache[themeKey]) return frameTextureCache[themeKey];
+        const off = document.createElement('canvas');
+        off.width = 256;
+        off.height = 256;
+        const octx = off.getContext('2d');
+        octx.fillStyle = 'transparent';
+        octx.fillRect(0, 0, 256, 256);
+        for (let y = 0; y < 256; y += 2) {
+          const alpha = (y % 6 === 0) ? 0.16 : 0.08;
+          octx.strokeStyle = y % 14 === 0 ? `rgba(255,220,180,${alpha * 0.45})` : `rgba(0,0,0,${alpha})`;
+          octx.lineWidth = (y % 8 === 0) ? 1.4 : 0.8;
+          octx.beginPath();
+          octx.moveTo(0, y);
+          for (let x = 0; x <= 256; x += 24) {
+            octx.lineTo(x, y + Math.sin(x * 0.045 + y * 0.09) * 1.8);
+          }
+          octx.stroke();
+        }
+        frameTextureCache[themeKey] = bctx.createPattern(off, 'repeat');
+        return frameTextureCache[themeKey];
+      }
+
       function getSurfacePattern(themeKey) {
         if (textureCache[themeKey]) return textureCache[themeKey];
         const t = THEMES[themeKey];
@@ -698,32 +821,70 @@
         const octx = off.getContext('2d');
         octx.fillStyle = 'transparent';
         octx.fillRect(0, 0, 256, 256);
-        octx.strokeStyle = t.grainColor;
 
         if (t.texture === 'wood') {
-          for (let y = 0; y < 256; y += 3) {
-            octx.lineWidth = (y % 9 === 0) ? 1.3 : 0.7;
+          // Multi-layered natural wood fibers & growth lines
+          for (let y = 0; y < 256; y += 2.5) {
+            const isMajor = (Math.floor(y) % 10 === 0);
+            octx.strokeStyle = t.grainColor;
+            octx.globalAlpha = isMajor ? 1.0 : 0.55;
+            octx.lineWidth = isMajor ? 1.4 : 0.75;
             octx.beginPath();
             octx.moveTo(0, y);
-            for (let x = 0; x <= 256; x += 32) {
-              octx.lineTo(x, y + Math.sin((x + y * 2) * 0.04) * 1.6);
+            const phase = y * 0.06;
+            for (let x = 0; x <= 256; x += 16) {
+              const wave = Math.sin(x * 0.024 + phase) * 2.8 + Math.cos(x * 0.05 - y * 0.03) * 1.0;
+              octx.lineTo(x, y + wave);
             }
             octx.stroke();
           }
+
+          // Subtle organic cathedral growth-ring knots
+          const knots = [
+            { x: 76, y: 84, rx: 38, ry: 12 },
+            { x: 192, y: 184, rx: 44, ry: 14 }
+          ];
+          for (const k of knots) {
+            for (let r = 1; r <= 4; r++) {
+              octx.strokeStyle = t.grainColor;
+              octx.globalAlpha = 0.72 - r * 0.12;
+              octx.lineWidth = 1.0;
+              octx.beginPath();
+              octx.ellipse(k.x, k.y, k.rx * (r * 0.26), k.ry * (r * 0.26), 0.06, 0, Math.PI * 2);
+              octx.stroke();
+            }
+          }
+
+          // Fine wood pores & matte sanded texture
+          octx.globalAlpha = 0.35;
+          octx.fillStyle = t.grainColor;
+          for (let i = 0; i < 160; i++) {
+            const px = (i * 73) % 256;
+            const py = (i * 137) % 256;
+            octx.fillRect(px, py, 3 + (i % 3), 0.8);
+          }
+          octx.globalAlpha = 1;
         } else if (t.texture === 'felt') {
-          octx.lineWidth = 0.8;
-          for (let i = 0; i < 256; i += 4) {
+          octx.strokeStyle = t.grainColor;
+          octx.lineWidth = 0.85;
+          for (let i = 0; i < 256; i += 3) {
+            octx.globalAlpha = (i % 6 === 0) ? 0.9 : 0.45;
             octx.beginPath(); octx.moveTo(i, 0); octx.lineTo(i, 256); octx.stroke();
             octx.beginPath(); octx.moveTo(0, i); octx.lineTo(256, i); octx.stroke();
           }
+          octx.globalAlpha = 1;
         } else {
-          for (let y = 0; y < 256; y += 4) {
-            octx.lineWidth = 0.9;
+          // Brushed slate / stone grain
+          octx.strokeStyle = t.grainColor;
+          for (let y = 0; y < 256; y += 3) {
+            octx.globalAlpha = (y % 9 === 0) ? 0.95 : 0.45;
+            octx.lineWidth = 1.0;
             octx.beginPath();
             octx.moveTo(0, y);
-            octx.lineTo(256, y + (y % 8 === 0 ? 1 : -1));
+            octx.lineTo(256, y + Math.sin(y * 0.1) * 1.5);
             octx.stroke();
           }
+          octx.globalAlpha = 1;
         }
         textureCache[themeKey] = bctx.createPattern(off, 'repeat');
         return textureCache[themeKey];
@@ -769,12 +930,21 @@
       let queenOwner = null;
       let queenPendingPlayer = null;
       let duesPending = { 1: 0, 2: 0 };
+      let hadRecoveredDue = { 1: false, 2: false };
+      let consecutivePasses = 0;
+      let turnTimeLeft = 15.0;
+      let sideChangeNotified = false;
       let breakDone = false;
       let breakAttempts = 0;
       let shotTouchedCoin = false;
+      let strikerLeftBaseline = false;
+      let shotStartBaselineCoord = 0;
       let shotPocketed = { white: 0, black: 0, queen: false, striker: false };
       let botTimer = null;
       let duePlacement = null;
+      let duePreviewPos = { x: CENTER, y: CENTER - 44 };
+      let joyActive = false;
+      let joyVec = { x: 0, y: 0 };
 
       let trickIndex = 0;
       let trickShotsLeft = 1;
@@ -894,8 +1064,77 @@
       }
 
       let noiseBuffer = null;
+      let clackWavUrl = null;
+      let pocketWavUrl = null;
+      const clackPool = [];
+      let pocketAudioEl = null;
+      let wavUnlocked = false;
+
+      function buildWavUrl(durationSec, fn) {
+        const sr = 22050;
+        const n = Math.floor(sr * durationSec);
+        const buf = new ArrayBuffer(44 + n * 2);
+        const v = new DataView(buf);
+        const writeStr = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+        writeStr(0, 'RIFF');
+        v.setUint32(4, 36 + n * 2, true);
+        writeStr(8, 'WAVE');
+        writeStr(12, 'fmt ');
+        v.setUint32(16, 16, true);
+        v.setUint16(20, 1, true);
+        v.setUint16(22, 1, true);
+        v.setUint32(24, sr, true);
+        v.setUint32(28, sr * 2, true);
+        v.setUint16(32, 2, true);
+        v.setUint16(34, 16, true);
+        writeStr(36, 'data');
+        v.setUint32(40, n * 2, true);
+        for (let i = 0; i < n; i++) {
+          const sample = Math.max(-1, Math.min(1, fn(i / sr, i / n)));
+          v.setInt16(44 + i * 2, sample * 32767, true);
+        }
+        return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+      }
+
+      function initWavAssets() {
+        if (clackWavUrl) return;
+        try {
+          clackWavUrl = buildWavUrl(0.065, (t, u) => {
+            const env = Math.exp(-u * 6.5);
+            const tone = Math.sin(2 * Math.PI * (900 - 650 * u) * t);
+            const snap = (Math.random() * 2 - 1) * Math.exp(-u * 14);
+            return (tone * 0.65 + snap * 0.45) * env * 0.95;
+          });
+          pocketWavUrl = buildWavUrl(0.18, (t, u) => {
+            const env = Math.exp(-u * 4.5);
+            return Math.sin(2 * Math.PI * (540 - 380 * u) * t) * env * 0.9;
+          });
+          for (let i = 0; i < 4; i++) {
+            const el = new Audio(clackWavUrl);
+            el.preload = 'auto';
+            clackPool.push(el);
+          }
+          pocketAudioEl = new Audio(pocketWavUrl);
+          pocketAudioEl.preload = 'auto';
+        } catch (_) {}
+      }
+
+      function playWavFallback(isPocket, vol = 0.8) {
+        if (!soundEnabled) return;
+        initWavAssets();
+        try {
+          const el = isPocket ? pocketAudioEl : (clackPool.find((a) => a.paused || a.ended) || clackPool[0]);
+          if (!el) return;
+          el.muted = false;
+          el.volume = Math.min(1, Math.max(0.2, vol));
+          el.currentTime = 0;
+          el.play().catch(() => {});
+        } catch (_) {}
+      }
+
       function ensureAudio() {
         if (!soundEnabled) return null;
+        initWavAssets();
         if (!audioCtx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (AudioCtx) audioCtx = new AudioCtx();
@@ -915,29 +1154,55 @@
 
       function unlockAudioOnce() {
         const ac = ensureAudio();
-        if (!ac) return;
-        try {
-          const buf = ac.createBuffer(1, 1, 22050);
-          const src = ac.createBufferSource();
-          src.buffer = buf;
-          src.connect(ac.destination);
-          src.start(0);
-        } catch (_) {}
+        if (ac && ac.state !== 'running') {
+          ac.resume().then(() => {
+            try {
+              const buf = ac.createBuffer(1, 1, 22050);
+              const src = ac.createBufferSource();
+              src.buffer = buf;
+              src.connect(ac.destination);
+              src.start(0);
+            } catch (_) {}
+          }).catch(() => {});
+        }
+        if (!wavUnlocked) {
+          wavUnlocked = true;
+          initWavAssets();
+          for (const el of [...clackPool, pocketAudioEl]) {
+            if (!el) continue;
+            try {
+              el.muted = true;
+              const p = el.play();
+              if (p && p.then) {
+                p.then(() => { el.pause(); el.currentTime = 0; el.muted = false; }).catch(() => { el.muted = false; });
+              }
+            } catch (_) {}
+          }
+        }
       }
-      ['touchstart', 'pointerdown', 'mousedown', 'keydown'].forEach((evt) => {
-        window.addEventListener(evt, unlockAudioOnce, { once: true, passive: true });
+      ['touchend', 'click', 'keydown'].forEach((evt) => {
+        const handler = () => {
+          unlockAudioOnce();
+          if (audioCtx && audioCtx.state === 'running' && wavUnlocked) {
+            window.removeEventListener(evt, handler, { passive: true });
+          }
+        };
+        window.addEventListener(evt, handler, { passive: true });
       });
 
       function playClack(intensity = 0.5) {
-        const ac = ensureAudio();
-        if (!ac || !soundEnabled) return;
+        if (!soundEnabled) return;
         const now = performance.now();
-        if (now - lastClackTime < 18) return;
+        if (now - lastClackTime < 30) return;
         lastClackTime = now;
-        const t = ac.currentTime;
-        const vol = Math.min(0.85, Math.max(0.22, intensity * 0.75));
+        const ac = ensureAudio();
+        const vol = Math.min(0.85, Math.max(0.25, intensity * 0.75));
 
-        // Crisp wooden snap (filtered noise burst)
+        if (!ac || ac.state !== 'running') {
+          playWavFallback(false, vol);
+          return;
+        }
+        const t = ac.currentTime;
         if (noiseBuffer) {
           const src = ac.createBufferSource();
           src.buffer = noiseBuffer;
@@ -953,8 +1218,6 @@
           ng.connect(ac.destination);
           src.start(t);
         }
-
-        // Warm wooden body tap
         const osc = ac.createOscillator();
         const gain = ac.createGain();
         osc.type = 'triangle';
@@ -969,8 +1232,12 @@
       }
 
       function playPocketSound(isQueen = false) {
+        if (!soundEnabled) return;
         const ac = ensureAudio();
-        if (!ac || !soundEnabled) return;
+        if (!ac || ac.state !== 'running') {
+          playWavFallback(true, 0.85);
+          return;
+        }
         const t = ac.currentTime;
         const osc = ac.createOscillator();
         const gain = ac.createGain();
@@ -1018,9 +1285,40 @@
         const distFromCenter = Math.hypot(x - CENTER, y - CENTER);
         if (distFromCenter + COIN_R > OUTER_CIRCLE_R) return false;
         if (distFromCenter < CENTRE_CIRCLE_R + COIN_R - 2) return false;
-        return !pieces.some(
+        const overlaps = pieces.some(
           (p) => p !== striker && !p.pocketed && Math.hypot(p.x - x, p.y - y) < p.r + COIN_R + 1.5
         );
+        if (overlaps) return false;
+
+        // ICF Law 104: Due/penalty coin cannot be placed to form a direct shot (Pair/Cannon) with the Queen
+        const queen = pieces.find((p) => p.type === 'queen' && !p.pocketed);
+        if (queen && currentRuleset === 'icf') {
+          const vx = x - queen.x;
+          const vy = y - queen.y;
+          const dq = Math.hypot(vx, vy);
+          if (dq > 0 && dq <= COIN_R * 3.6) {
+            for (const pk of POCKETS) {
+              const qx = pk.x - queen.x;
+              const qy = pk.y - queen.y;
+              const qLen = Math.hypot(qx, qy) || 1;
+              const align = Math.abs((vx * qx + vy * qy) / (dq * qLen));
+              if (align > 0.95) return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      function findInitialDueSpot() {
+        for (let r = 42; r <= OUTER_CIRCLE_R - COIN_R - 2; r += 8) {
+          for (let deg = 0; deg < 360; deg += 15) {
+            const rad = (deg * Math.PI) / 180;
+            const cx = CENTER + Math.cos(rad) * r;
+            const cy = CENTER + Math.sin(rad) * r;
+            if (isValidDueSpot(cx, cy)) return { x: cx, y: cy };
+          }
+        }
+        return { x: CENTER, y: CENTER - 44 };
       }
 
       function returnPieceToBoard(type, inOuterCircle = true, customPos = null) {
@@ -1068,10 +1366,14 @@
         queenOwner = null;
         queenPendingPlayer = null;
         duesPending = { 1: 0, 2: 0 };
+        hadRecoveredDue = { 1: false, 2: false };
+        consecutivePasses = 0;
+        turnTimeLeft = 15.0;
         pocketedTrays = { 1: [], 2: [] };
         breakDone = currentRuleset === 'freestyle' || currentRuleset === 'tricks';
         breakAttempts = 0;
         currentPlayer = currentRuleset === 'tricks' ? 1 : boardBreaker;
+        turnTimeLeft = 15.0;
         kbAiming = false;
         kbAngle = getDefaultAimAngle(currentPlayer);
         shotPocketed = { white: 0, black: 0, queen: false, striker: false };
@@ -1109,7 +1411,13 @@
 
         isMoving = false;
         isAiming = false;
-        nextBoardBtn.classList.add('hidden');
+        activePlayDock.classList.remove('hidden');
+        activePlayDock.classList.add('flex');
+        sliderRow.classList.remove('hidden');
+        dueJoystickRow.classList.add('hidden');
+        dueJoystickRow.classList.remove('flex');
+        postRoundDock.classList.add('hidden');
+        postRoundDock.classList.remove('flex');
         foregoDueBtn.classList.add('hidden');
         strikerSlider.disabled = isBotTurn() || isRemoteTurn();
         strikerSlider.value = '0';
@@ -1135,10 +1443,26 @@
         boardBreaker = 1;
         gameOver = false;
         matchOver = false;
+        sideChangeNotified = false;
         setupBoard();
       }
 
+      function syncTraysFromPieces() {
+        if (currentRuleset === 'freestyle' || currentRuleset === 'tricks') return;
+        for (const team of [1, 2]) {
+          const col = getPlayerColor(team);
+          const count = pieces.filter((p) => p.type === col && p.pocketed).length;
+          const list = [];
+          for (let i = 0; i < count; i++) list.push(col);
+          if (queenOwner === team) list.push('queen');
+          pocketedTrays[team] = list;
+        }
+      }
+
       function renderTray(el, list) {
+        const key = `${currentPieceTheme}|${list.join(',')}`;
+        if (el.dataset.trayKey === key) return;
+        el.dataset.trayKey = key;
         const pPalette = PIECE_THEMES[currentPieceTheme];
         el.innerHTML = '';
         for (const t of list) {
@@ -1208,6 +1532,7 @@
       }
 
       function updateHUD(msg) {
+        needsRedraw = true;
         if (msg) statusText.textContent = msg;
 
         const pPalette = PIECE_THEMES[currentPieceTheme];
@@ -1228,11 +1553,13 @@
         const pocketedCoins = pieces.filter((p) => p.type !== 'striker' && p.pocketed).length;
         pocketCountEl.textContent = `${pocketedCoins} / ${totalCoins}`;
 
-        turnBadge.textContent =
+        const baseTurnText =
           currentRuleset === 'tricks' ? 'Solo' :
           gameMode === 'bot' && currentPlayer === 2 ? 'Bot Turn' :
           gameMode === 'online' ? (currentPlayer === onlineSeat ? 'Your Turn' : 'Opponent') :
           `P${currentPlayer} Turn`;
+        turnBadge.textContent = baseTurnText;
+        passTurnBtn.classList.toggle('hidden', currentRuleset === 'tricks' || Boolean(duePlacement) || isBotTurn() || isRemoteTurn());
 
         if (currentRuleset === 'tricks') {
           const lvl = TRICK_LEVELS[trickIndex];
@@ -1311,16 +1638,17 @@
 
         p1WinsEl.textContent = `Wins: ${wins.p1}`;
         p2WinsEl.textContent = `Wins: ${wins.p2}`;
+        syncTraysFromPieces();
         renderTray(p1TrayEl, pocketedTrays[1]);
         renderTray(p2TrayEl, pocketedTrays[2]);
 
         const activeTeam = getTeam(currentPlayer);
-        p1Card.className = `rounded-2xl p-2.5 border transition-all duration-300 ${
+        p1Card.className = `rounded-2xl p-2.5 border transition-colors duration-150 ${
           activeTeam === 1 && !boardOver && !matchOver
             ? 'bg-stone-800/95 border-amber-500 shadow-lg shadow-amber-500/10'
             : 'bg-stone-900/60 border-stone-800 opacity-75'
         }`;
-        p2Card.className = `rounded-2xl p-2.5 border transition-all duration-300 ${
+        p2Card.className = `rounded-2xl p-2.5 border transition-colors duration-150 ${
           activeTeam === 2 && !boardOver && !matchOver
             ? 'bg-stone-800/95 border-amber-500 shadow-lg shadow-amber-500/10'
             : 'bg-stone-900/60 border-stone-800 opacity-75'
@@ -1335,8 +1663,14 @@
         striker.prevX = pos.x; striker.prevY = pos.y;
         striker.vx = 0; striker.vy = 0;
         striker.pocketed = false; striker.dropping = false; striker.dropScale = 1;
+        const prevBlocked = strikerBlocked;
         strikerBlocked = !isStrikerClear(pos.x, pos.y);
-        if (strikerBlocked) statusText.textContent = 'Blocked! Slide striker clear of coins on the baseline.';
+        if (strikerBlocked !== prevBlocked) {
+          statusText.textContent = strikerBlocked
+            ? 'Blocked! Slide striker clear of coins on the baseline.'
+            : `${getActorName(currentPlayer)}'s turn — pull back on the striker to shoot!`;
+        }
+        needsRedraw = true;
       }
 
       function prepareNextTurnBaseline(msg) {
@@ -1344,9 +1678,8 @@
         if (!clear) {
           boardOver = true;
           strikerSlider.disabled = true;
-          nextBoardBtn.textContent = 'Replay Board';
-          nextBoardBtn.classList.remove('hidden');
           updateHUD('Baseline completely blocked by coins (ICF Law 136) — replay board!');
+          showResultModal(true, 'Replay Round (Law 136)', 'Baseline is completely blocked by coins.', `Round ${boardNumber}`, 'Replay Board');
           return;
         }
         striker.x = clear.x; striker.y = clear.y;
@@ -1367,6 +1700,9 @@
         const { nextPlayer, postMsg } = duePlacement;
         duePlacement = null;
         foregoDueBtn.classList.add('hidden');
+        dueJoystickRow.classList.add('hidden');
+        dueJoystickRow.classList.remove('flex');
+        sliderRow.classList.remove('hidden');
         currentPlayer = nextPlayer;
         prepareNextTurnBaseline(foregone ? `Due foregone. ${postMsg}` : postMsg);
       }
@@ -1387,14 +1723,22 @@
           for (let i = 0; i < toPlace; i++) {
             returnPieceToBoard(placeColor, true);
             duesPending[offenderTeam] -= 1;
+            hadRecoveredDue[offenderTeam] = true;
           }
           currentPlayer = nextPlayer;
           prepareNextTurnBaseline(postMsg);
           return;
         }
 
+        turnTimeLeft = 15.0;
         duePlacement = { offender: offenderTeam, beneficiary: beneficiaryTeam, color: placeColor, count: toPlace, nextPlayer, postMsg };
         strikerSlider.disabled = true;
+        duePreviewPos = findInitialDueSpot();
+        joyVec = { x: 0, y: 0 };
+        dueJoystickKnob.style.transform = 'translate(0px, 0px)';
+        sliderRow.classList.add('hidden');
+        dueJoystickRow.classList.remove('hidden');
+        dueJoystickRow.classList.add('flex');
         foregoDueBtn.classList.remove('hidden');
         updateHUD(
           `${getTeamName(beneficiaryTeam)}: tap inside the Outer Circle to place ${getTeamName(offenderTeam)}'s Due coin (${toPlace} left), or Forego Due.`
@@ -1496,7 +1840,7 @@
               striker.vx = bestShot.nx * bestShot.power * SHOT_POWER;
               striker.vy = bestShot.ny * bestShot.power * SHOT_POWER;
               shotPocketed = { white: 0, black: 0, queen: false, striker: false };
-              shotTouchedCoin = false;
+              shotTouchedCoin = false; strikerLeftBaseline = false; shotStartBaselineCoord = (gameMode === "4p" && (currentPlayer === 2 || currentPlayer === 4)) ? striker.x : striker.y; consecutivePasses = 0;
               isMoving = true;
               playClack(0.7);
               updateHUD('Bot took a shot...');
@@ -1505,43 +1849,60 @@
         }, 380);
       }
 
+      let cachedCanvasRect = null;
+      let needsRedraw = true;
+
       function resizeCanvas() {
         const rect = boardWrap.getBoundingClientRect();
         const size = Math.max(240, Math.floor(Math.min(rect.width, rect.height)));
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = size * dpr;
-        canvas.height = size * dpr;
-        ctx.setTransform((size * dpr) / BOARD_SIZE, 0, 0, (size * dpr) / BOARD_SIZE, 0, 0);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const targetPx = Math.round(size * dpr);
+        if (canvas.width !== targetPx || canvas.height !== targetPx) {
+          canvas.width = targetPx;
+          canvas.height = targetPx;
+          boardCacheCanvas.width = targetPx;
+          boardCacheCanvas.height = targetPx;
+          lastBoardCacheKey = '';
+        }
+        ctx.setTransform(targetPx / BOARD_SIZE, 0, 0, targetPx / BOARD_SIZE, 0, 0);
+        cachedCanvasRect = canvas.getBoundingClientRect();
+        needsRedraw = true;
         draw();
       }
 
-      function getBoardCoords(e) {
-        const rect = canvas.getBoundingClientRect();
+      function getBoardCoords(e, refreshRect = false) {
+        if (refreshRect || !cachedCanvasRect || cachedCanvasRect.width === 0) {
+          cachedCanvasRect = canvas.getBoundingClientRect();
+        }
         return {
-          x: ((e.clientX - rect.left) / rect.width) * BOARD_SIZE,
-          y: ((e.clientY - rect.top) / rect.height) * BOARD_SIZE
+          x: ((e.clientX - cachedCanvasRect.left) / cachedCanvasRect.width) * BOARD_SIZE,
+          y: ((e.clientY - cachedCanvasRect.top) / cachedCanvasRect.height) * BOARD_SIZE
         };
       }
 
       canvas.addEventListener('pointerdown', (e) => {
         ensureAudio();
+        needsRedraw = true;
         if (duePlacement) {
-          const pt = getBoardCoords(e);
-          if (isValidDueSpot(pt.x, pt.y)) {
-            returnPieceToBoard(duePlacement.color, true, pt);
-            duesPending[duePlacement.offender] -= 1;
-            duePlacement.count -= 1;
-            playClack(0.35);
-            if (duePlacement.count <= 0) finishDuePlacement(false);
-            else updateHUD(`${getTeamName(duePlacement.beneficiary)}: place ${duePlacement.count} more Due coin inside the Outer Circle.`);
-          } else {
-            updateHUD('Invalid spot — place inside the Outer Circle without touching the Centre Circle or other coins.');
+          const pt = getBoardCoords(e, true);
+          const dx = pt.x - CENTER;
+          const dy = pt.y - CENTER;
+          const dist = Math.hypot(dx, dy);
+          const maxR = OUTER_CIRCLE_R - COIN_R;
+          if (dist <= OUTER_CIRCLE_R + 24) {
+            if (dist > maxR && dist > 0) {
+              duePreviewPos = { x: CENTER + (dx / dist) * maxR, y: CENTER + (dy / dist) * maxR };
+            } else {
+              duePreviewPos = { x: pt.x, y: pt.y };
+            }
+            const ok = isValidDueSpot(duePreviewPos.x, duePreviewPos.y);
+            updateHUD(ok ? 'Spot valid — use joystick to fine-tune or tap Place Coin!' : 'Blocked spot (Centre Circle, coin overlap, or Law 104 Queen line) — adjust with joystick!');
           }
           return;
         }
 
         if (isMoving || boardOver || matchOver || isBotTurn() || isRemoteTurn()) return;
-        const pt = getBoardCoords(e);
+        const pt = getBoardCoords(e, true);
         if (Math.hypot(pt.x - striker.x, pt.y - striker.y) <= STRIKER_R * 2.2) {
           if (strikerBlocked) {
             updateHUD('Blocked! Slide striker clear of coins on the baseline before shooting.');
@@ -1557,7 +1918,8 @@
 
       canvas.addEventListener('pointermove', (e) => {
         if (!isAiming || isBotTurn() || isRemoteTurn()) return;
-        aimPoint = getBoardCoords(e);
+        aimPoint = getBoardCoords(e, false);
+        needsRedraw = true;
       });
 
       function releaseShot(e) {
@@ -1576,7 +1938,7 @@
           striker.vx = (dx / dist) * clamped * SHOT_POWER;
           striker.vy = (dy / dist) * clamped * SHOT_POWER;
           shotPocketed = { white: 0, black: 0, queen: false, striker: false };
-          shotTouchedCoin = false;
+          shotTouchedCoin = false; strikerLeftBaseline = false; shotStartBaselineCoord = (gameMode === "4p" && (currentPlayer === 2 || currentPlayer === 4)) ? striker.x : striker.y; consecutivePasses = 0;
           isMoving = true;
           strikerSlider.disabled = true;
           if (gameMode === 'online' && ws && ws.readyState === 1) {
@@ -1627,7 +1989,7 @@
           striker.vx = Math.cos(kbAngle) * kbPower * SHOT_POWER;
           striker.vy = Math.sin(kbAngle) * kbPower * SHOT_POWER;
           shotPocketed = { white: 0, black: 0, queen: false, striker: false };
-          shotTouchedCoin = false;
+          shotTouchedCoin = false; strikerLeftBaseline = false; shotStartBaselineCoord = (gameMode === "4p" && (currentPlayer === 2 || currentPlayer === 4)) ? striker.x : striker.y; consecutivePasses = 0;
           isMoving = true;
           strikerSlider.disabled = true;
           if (gameMode === 'online' && ws && ws.readyState === 1) {
@@ -1644,15 +2006,137 @@
         duesPending[duePlacement.offender] = Math.max(0, duesPending[duePlacement.offender] - duePlacement.count);
         finishDuePlacement(true);
       });
+
+      let joyPadRect = null;
+      let lastDueValidState = null;
+
+      function updateConfirmDueBtnStyle(valid) {
+        if (lastDueValidState === valid) return;
+        lastDueValidState = valid;
+        confirmDueBtn.className = valid
+          ? 'px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-950/50 shrink-0 transition'
+          : 'px-3.5 py-2 rounded-xl text-xs font-bold bg-stone-700 text-stone-400 shrink-0 transition';
+      }
+
+      // Joystick controls for precision Due coin alignment
+      function updateJoystickFromEvent(e) {
+        if (!joyPadRect) joyPadRect = dueJoystickPad.getBoundingClientRect();
+        const cx = joyPadRect.left + joyPadRect.width / 2;
+        const cy = joyPadRect.top + joyPadRect.height / 2;
+        const maxDist = joyPadRect.width * 0.36;
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        const clamped = Math.min(dist, maxDist);
+        const nx = dist > 0 ? dx / dist : 0;
+        const ny = dist > 0 ? dy / dist : 0;
+        const kx = nx * clamped;
+        const ky = ny * clamped;
+        dueJoystickKnob.style.transform = `translate3d(${kx.toFixed(1)}px, ${ky.toFixed(1)}px, 0)`;
+        joyVec = { x: kx / maxDist, y: ky / maxDist };
+      }
+
+      dueJoystickPad.addEventListener('pointerdown', (e) => {
+        if (!duePlacement) return;
+        ensureAudio();
+        joyActive = true;
+        joyPadRect = dueJoystickPad.getBoundingClientRect();
+        dueJoystickPad.setPointerCapture(e.pointerId);
+        updateJoystickFromEvent(e);
+      });
+      dueJoystickPad.addEventListener('pointermove', (e) => {
+        if (!joyActive || !duePlacement) return;
+        updateJoystickFromEvent(e);
+      });
+      function releaseJoystick(e) {
+        if (!joyActive) return;
+        joyActive = false;
+        needsRedraw = true;
+        joyVec = { x: 0, y: 0 };
+        dueJoystickKnob.style.transform = 'translate(0px, 0px)';
+        if (e && dueJoystickPad.hasPointerCapture && dueJoystickPad.hasPointerCapture(e.pointerId)) {
+          dueJoystickPad.releasePointerCapture(e.pointerId);
+        }
+      }
+      dueJoystickPad.addEventListener('pointerup', releaseJoystick);
+      dueJoystickPad.addEventListener('pointercancel', releaseJoystick);
+
+      confirmDueBtn.addEventListener('click', () => {
+        if (!duePlacement) return;
+        ensureAudio();
+        if (isValidDueSpot(duePreviewPos.x, duePreviewPos.y)) {
+          returnPieceToBoard(duePlacement.color, true, duePreviewPos);
+          duesPending[duePlacement.offender] -= 1;
+          hadRecoveredDue[duePlacement.offender] = true;
+          duePlacement.count -= 1;
+          playClack(0.35);
+          if (duePlacement.count <= 0) {
+            finishDuePlacement(false);
+          } else {
+            duePreviewPos = findInitialDueSpot();
+            turnTimeLeft = 15.0;
+            updateHUD(`${getTeamName(duePlacement.beneficiary)}: align & place ${duePlacement.count} more Due coin inside the Outer Circle.`);
+          }
+        } else {
+          updateHUD('Invalid spot — nudge with the joystick until the preview ring turns green!');
+        }
+      });
+      passTurnBtn.addEventListener('click', () => {
+        if (isMoving || boardOver || matchOver || duePlacement || isBotTurn() || isRemoteTurn()) return;
+        ensureAudio();
+        consecutivePasses += 1;
+        const maxPasses = gameMode === '4p' ? 12 : 6;
+        if (consecutivePasses >= maxPasses) {
+          boardOver = true;
+          strikerSlider.disabled = true;
+          updateHUD('Players passed 3 times consecutively (ICF Law 124) — board cancelled & replayed!');
+          showResultModal(true, 'Replay Round (Law 124)', 'Players passed their turn 3 times consecutively.', `Round ${boardNumber}`, 'Replay Board');
+          return;
+        }
+        const prevName = getActorName(currentPlayer);
+        currentPlayer = getNextTurnPlayer(currentPlayer);
+        prepareNextTurnBaseline(`${prevName} passed (${consecutivePasses}/${maxPasses}). ${getActorName(currentPlayer)}'s turn.`);
+      });
       resetBtn.addEventListener('click', () => {
         ensureAudio();
         if (currentRuleset === 'tricks') setupBoard();
         else startNewMatch();
       });
+      function showResultModal(wonByUser, title, desc, scoreText, nextLabel) {
+        resultBadge.textContent = wonByUser ? '🏆' : '🎯';
+        resultBadge.className = `w-12 h-12 mx-auto mb-3 rounded-2xl border flex items-center justify-center text-2xl ${
+          wonByUser ? 'bg-emerald-500/20 border-emerald-400/40' : 'bg-rose-500/20 border-rose-400/40'
+        }`;
+        resultTitle.textContent = title;
+        resultDesc.textContent = desc;
+        resultScorePill.textContent = scoreText;
+        resultNextBtn.textContent = nextLabel;
+
+        // Sync post-round inspection bar so "View Board" has seamless UI continuity
+        activePlayDock.classList.add('hidden');
+        activePlayDock.classList.remove('flex');
+        postRoundDock.classList.remove('hidden');
+        postRoundDock.classList.add('flex');
+        postRoundTitle.textContent = `${title} · ${scoreText}`;
+        postRoundSub.textContent = desc;
+        nextBoardBtn.textContent = nextLabel;
+
+        openModal(resultModal);
+      }
+
+      resultDismissBtn.addEventListener('click', () => closeModal(resultModal));
+      reopenResultBtn.addEventListener('click', () => openModal(resultModal));
+      resultModal.addEventListener('click', (e) => { if (e.target === resultModal) closeModal(resultModal); });
+      resultNextBtn.addEventListener('click', () => {
+        closeModal(resultModal);
+        nextBoardBtn.click();
+      });
+
       nextBoardBtn.addEventListener('click', () => {
         ensureAudio();
         if (currentRuleset === 'tricks') {
-          if (nextBoardBtn.textContent.startsWith('Next')) trickIndex = (trickIndex + 1) % TRICK_LEVELS.length;
+          if (nextBoardBtn.textContent.includes('Stage') && !nextBoardBtn.textContent.includes('Retry') && !nextBoardBtn.textContent.includes('Replay')) trickIndex = (trickIndex + 1) % TRICK_LEVELS.length;
+          else if (nextBoardBtn.textContent.includes('Replay All')) trickIndex = 0;
           setupBoard();
           return;
         }
@@ -1764,7 +2248,7 @@
               striker.y = getBaselineCoords(0, currentPlayer).y; striker.prevY = striker.y;
               striker.vx = msg.vx; striker.vy = msg.vy;
               shotPocketed = { white: 0, black: 0, queen: false, striker: false };
-              shotTouchedCoin = false; isMoving = true;
+              shotTouchedCoin = false; strikerLeftBaseline = false; shotStartBaselineCoord = (gameMode === "4p" && (currentPlayer === 2 || currentPlayer === 4)) ? striker.x : striker.y; consecutivePasses = 0; isMoving = true;
               playClack(0.7); updateHUD("Opponent's shot in play...");
             } else if (msg.type === 'error') {
               onlineStatusEl.textContent = msg.message || 'Room error.';
@@ -1805,7 +2289,7 @@
         closeModal(onlineModal); startNewMatch();
       });
 
-      function finishBoard(winnerTeam, reasonMsg, queenBonusOverride = null) {
+      function finishBoard(winnerTeam, reasonMsg, queenBonusOverride = null, exactPoints = null) {
         boardOver = true;
         strikerSlider.disabled = true;
 
@@ -1816,7 +2300,9 @@
           savePrefs();
           nextBoardBtn.textContent = 'Play Again';
           nextBoardBtn.classList.remove('hidden');
-          updateHUD(`${reasonMsg} ${getTeamName(winnerTeam)} wins the Quick Match!`);
+          const msg = `${reasonMsg} ${getTeamName(winnerTeam)} wins the Quick Match!`;
+          updateHUD(msg);
+          showResultModal(winnerTeam === 1, winnerTeam === 1 ? 'You Won!' : `${getTeamName(winnerTeam)} Won`, reasonMsg, `Wins: P1 ${wins.p1} · ${getTeamName(2)} ${wins.p2}`, 'Play Again →');
           return;
         }
 
@@ -1826,15 +2312,28 @@
         const winnerKey = winnerTeam === 1 ? 'p1' : 'p2';
         const preScore = points[winnerKey];
 
-        let queenPts = 0;
-        if (queenBonusOverride !== null) queenPts = preScore >= 22 ? 1 : queenBonusOverride;
-        else if (queenOwner === winnerTeam && preScore < 22) queenPts = 3;
-
-        const boardPts = Math.min(12, loserCoinsLeft + queenPts);
+        let boardPts = 0;
+        if (exactPoints !== null) {
+          boardPts = Math.min(12, Math.max(1, exactPoints));
+        } else {
+          let queenPts = 0;
+          if (queenBonusOverride !== null) queenPts = preScore >= 22 ? 1 : queenBonusOverride;
+          else if (queenOwner === winnerTeam && preScore < 22) queenPts = 3;
+          boardPts = Math.min(12, Math.max(1, loserCoinsLeft + queenPts));
+        }
         points[winnerKey] += boardPts;
+
+        // ICF Law 38: Any outstanding Due/penalty C/m are written off at the end of the board
+        duesPending = { 1: 0, 2: 0 };
 
         const winnerName = getTeamName(winnerTeam);
         let msg = `${reasonMsg} ${winnerName} scores +${boardPts} pts (${points.p1}–${points.p2}).`;
+
+        // AICF Section X: Change of sides in deciding Game 3 at 13+ points or after 4th board
+        if (gameNumber === 3 && !sideChangeNotified && (points.p1 >= 13 || points.p2 >= 13 || boardNumber === 4)) {
+          sideChangeNotified = true;
+          msg += ' (ICF Section X: Change of Sides milestone reached!)';
+        }
 
         const reached25 = points[winnerKey] >= 25;
         const finished8Boards = boardNumber >= 8 && points.p1 !== points.p2;
@@ -1849,10 +2348,10 @@
             matchOver = true;
             wins[gwKey] += 1;
             savePrefs();
-            msg = `${getTeamName(gameWinner)} wins Game ${gameNumber} (${points.p1}–${points.p2}) and the Match (${matchGames.p1}–${matchGames.p2})!`;
+            msg = `${getTeamName(winnerTeam)} wins Game ${gameNumber} (${points.p1}–${points.p2}) and the Match (${matchGames.p1}–${matchGames.p2})!`;
             nextBoardBtn.textContent = 'New Match';
           } else {
-            msg = `${getTeamName(gameWinner)} wins Game ${gameNumber} (${points.p1}–${points.p2})! Ready for Game ${gameNumber + 1}.`;
+            msg = `${getTeamName(winnerTeam)} wins Game ${gameNumber} (${points.p1}–${points.p2})! Ready for Game ${gameNumber + 1}.`;
             nextBoardBtn.textContent = `Start Game ${gameNumber + 1}`;
           }
         } else if (boardNumber >= 8 && points.p1 === points.p2) {
@@ -1864,6 +2363,28 @@
 
         nextBoardBtn.classList.remove('hidden');
         updateHUD(msg);
+        const isUserWin = gameMode === 'online' ? winnerTeam === onlineSeat : winnerTeam === 1;
+        const roundTitle = matchOver
+          ? `${getTeamName(winnerTeam)} Wins the Match!`
+          : gameOver
+            ? `${getTeamName(winnerTeam)} Wins Game ${gameNumber}!`
+            : isUserWin
+              ? `Round ${boardNumber} Won!`
+              : `Round ${boardNumber} Lost`;
+        const nextCta = matchOver
+          ? 'Play New Match →'
+          : gameOver
+            ? `Start Game ${gameNumber + 1} →`
+            : boardNumber >= 8 && points.p1 === points.p2
+              ? 'Play Tie-Break Round →'
+              : `Continue to Round ${boardNumber + 1} →`;
+        showResultModal(
+          isUserWin,
+          roundTitle,
+          `${reasonMsg} ${winnerName} scored +${boardPts} pts.`,
+          `Score: ${getTeamName(1)} ${points.p1} – ${points.p2} ${getTeamName(2)}`,
+          nextCta
+        );
       }
 
       function evaluateShot() {
@@ -1874,6 +2395,7 @@
             boardOver = true; strikerSlider.disabled = true;
             nextBoardBtn.textContent = 'Retry Stage'; nextBoardBtn.classList.remove('hidden');
             updateHUD('Striker pocketed (Foul)! Hit Retry Stage to try again.');
+            showResultModal(false, `Stage ${trickIndex + 1} Failed`, 'Striker pocketed (Foul).', `Cleared: ${tricksCleared} puzzles`, 'Retry Stage →');
             return;
           }
           if (remaining === 0) {
@@ -1883,12 +2405,14 @@
             nextBoardBtn.classList.remove('hidden');
             addPopup(CENTER, CENTER - 40, 'STAGE CLEARED!', '#6ee7b7');
             updateHUD(`Stage ${trickIndex + 1} cleared! Ready for the next puzzle.`);
+            showResultModal(true, `Stage ${trickIndex + 1} Cleared!`, TRICK_LEVELS[trickIndex].name, `Total Cleared: ${tricksCleared}`, trickIndex + 1 < TRICK_LEVELS.length ? `Continue to Stage ${trickIndex + 2} →` : 'Replay All Stages →');
             return;
           }
           if (trickShotsLeft <= 0) {
             boardOver = true; strikerSlider.disabled = true;
             nextBoardBtn.textContent = 'Retry Stage'; nextBoardBtn.classList.remove('hidden');
             updateHUD('Out of shots! Hit Retry Stage to try again.');
+            showResultModal(false, `Stage ${trickIndex + 1} Incomplete`, 'You ran out of shots for this puzzle.', `Cleared: ${tricksCleared} puzzles`, 'Retry Stage →');
             return;
           }
           prepareNextTurnBaseline(`${trickShotsLeft} shot${trickShotsLeft === 1 ? '' : 's'} left — clear the remaining coins!`);
@@ -1952,6 +2476,7 @@
             wins[winnerTeam === 1 ? 'p1' : 'p2'] += 1; savePrefs();
             nextBoardBtn.textContent = 'New Match'; nextBoardBtn.classList.remove('hidden');
             updateHUD(`${getTeamName(winnerTeam)} wins Freestyle (${points.p1}–${points.p2} pts)!`);
+            showResultModal(winnerTeam === 1, winnerTeam === 1 ? 'Freestyle Won!' : `${getTeamName(winnerTeam)} Won`, 'Freestyle match complete.', `${getTeamName(1)} ${points.p1} – ${points.p2} ${getTeamName(2)} pts`, 'Play New Match →');
             return;
           }
 
@@ -1960,6 +2485,7 @@
           return;
         }
 
+        // --- Official ICF & Quick 1-Board Rules Engine ---
         const myColor = getPlayerColor(currentPlayer);
         const oppColor = myColor === 'white' ? 'black' : 'white';
         const myPocketedThisShot = shotPocketed[myColor];
@@ -1968,17 +2494,24 @@
         let msg = '';
         let checkDueFor = null;
 
+        // ICF Law 115: Striker slips and does not leave baselines and touches no coin -> stroke not made, repeat
+        if (!strikerLeftBaseline && !shotTouchedCoin && !shotPocketed.striker) {
+          prepareNextTurnBaseline(`Striker slip within baseline (ICF Law 115) — repeat your stroke!`);
+          return;
+        }
+
+        // ICF Section F (Laws 23–26): Break Rules
         if (!breakDone) {
           if (!shotTouchedCoin) {
             breakAttempts += 1;
             if (shotPocketed.striker) {
               nextPlayer = nextSeat;
-              msg = `Break foul: striker pocketed without touching the rack (no Due). ${getActorName(nextPlayer)}'s turn.`;
+              msg = `Break foul (Law 26): striker pocketed without touching rack (no Due). ${getActorName(nextPlayer)}'s turn.`;
             } else if (breakAttempts < 3) {
-              msg = `Break missed! ${actorName} gets attempt ${breakAttempts + 1} of 3.`;
+              msg = `Break missed (Law 24)! ${actorName} gets attempt ${breakAttempts + 1} of 3.`;
             } else {
               nextPlayer = nextSeat;
-              msg = `3 missed breaks — turn passes to ${getActorName(nextPlayer)}.`;
+              msg = `3 missed breaks (Law 25) — turn passes to ${getActorName(nextPlayer)}.`;
             }
             currentPlayer = nextPlayer;
             prepareNextTurnBaseline(msg);
@@ -1989,108 +2522,207 @@
 
         const myPocketedTotalBefore =
           pieces.filter((p) => p.type === myColor && p.pocketed).length - myPocketedThisShot;
+        const myLeftAfterStroke = pieces.filter((p) => p.type === myColor && !p.pocketed).length;
+        const oppLeftAfterStroke = pieces.filter((p) => p.type === oppColor && !p.pocketed).length;
+        const queenOnBoardAfterStroke = pieces.some((p) => p.type === 'queen' && !p.pocketed);
+        const oppPreScore = points[oppTeam === 1 ? 'p1' : 'p2'];
+        const myPreScore = points[myTeam === 1 ? 'p1' : 'p2'];
+        const wasCoveringQueen = (queenPendingPlayer === myTeam);
 
+        // --- First check ICF Laws 98–102 (End-of-Board Last-Coin + Striker fouls) BEFORE returning coins ---
+        if (shotPocketed.striker) {
+          // Law 99: Pockets Queen + own last C/m + opponent's last C/m + Striker
+          if (shotPocketed.queen && myLeftAfterStroke === 0 && oppLeftAfterStroke === 0) {
+            const pts = (oppPreScore >= 22 ? 1 : 3) + 1;
+            finishBoard(oppTeam, `${actorName} pocketed Queen, both last coins & Striker (Law 99)!`, null, pts);
+            return;
+          }
+          // Laws 100 & 102: Pockets own last C/m + opponent's last C/m + Striker
+          if (myLeftAfterStroke === 0 && oppLeftAfterStroke === 0) {
+            if (queenOwner === myTeam) {
+              finishBoard(oppTeam, `${actorName} pocketed both last coins with Striker (Law 100)!`, null, 2);
+              return;
+            } else {
+              const pts = (oppPreScore >= 22 ? 1 : 3) + 1;
+              finishBoard(oppTeam, `${actorName} pocketed both last coins with Striker (Law 102)!`, null, pts);
+              return;
+            }
+          }
+          // Law 98: Pockets own last C/m + Striker leaving Queen on the board (or uncovered)
+          if (myLeftAfterStroke === 0 && (queenOnBoardAfterStroke || shotPocketed.queen || wasCoveringQueen)) {
+            const pts = (oppPreScore >= 22 ? 1 : 3) + 1;
+            finishBoard(oppTeam, `${actorName} pocketed last coin with Striker leaving Queen unsettled (Law 98)!`, null, pts);
+            return;
+          }
+          // Law 101: Pockets opponent's last C/m + Striker
+          if (oppLeftAfterStroke === 0) {
+            for (let i = 0; i < myPocketedThisShot; i++) returnPieceToBoard(myColor, true);
+            const myRemaining = pieces.filter((p) => p.type === myColor && !p.pocketed).length;
+            const qVal = (queenOnBoardAfterStroke || shotPocketed.queen || wasCoveringQueen || queenOwner === oppTeam)
+              ? (oppPreScore >= 22 ? 0 : 3)
+              : 0;
+            const pts = Math.min(12, myRemaining + qVal + 1);
+            finishBoard(oppTeam, `${actorName} pocketed ${getTeamName(oppTeam)}'s last coin with Striker (Law 101)!`, null, pts);
+            return;
+          }
+        }
+
+        // --- Standard Striker Pocketed (Due) Rules (Laws 56–60, 85, 89–92) ---
         if (shotPocketed.striker) {
           addPopup(striker.dropTargetX, striker.dropTargetY - 20, 'DUE!', '#f87171');
           for (let i = 0; i < myPocketedThisShot; i++) returnPieceToBoard(myColor, true);
-          if (shotPocketed.queen || queenPendingPlayer === myTeam) {
-            returnPieceToBoard('queen', false); queenPendingPlayer = null;
-          }
           duesPending[myTeam] += 1;
-
-          if (myPocketedThisShot > 0 && oppPocketedThisShot === 0) {
-            nextPlayer = currentPlayer;
-            msg = `${actorName} pocketed striker + own coin: coins returned, turn continues.`;
-          } else {
-            nextPlayer = nextSeat;
-            msg = `Due! ${actorName} pocketed the striker. ${getActorName(nextPlayer)}'s turn.`;
-          }
           checkDueFor = { offender: myTeam, beneficiary: oppTeam };
+
+          if (wasCoveringQueen) {
+            if (myPocketedThisShot > 0) {
+              // ICF Law 92: While covering Queen, Striker + own C/m -> own C/m + Due returned, Queen stays pending, turn continues!
+              nextPlayer = currentPlayer;
+              msg = `Law 92: ${actorName} pocketed striker + own coin while covering Queen — turn continues to cover Queen!`;
+            } else {
+              // ICF Law 91: While covering Queen, Striker alone -> Queen returned, 1 Due, lose turn
+              returnPieceToBoard('queen', false);
+              queenPendingPlayer = null;
+              nextPlayer = nextSeat;
+              msg = `Law 91: Striker pocketed while covering Queen — Queen returned & ${getActorName(nextPlayer)}'s turn.`;
+            }
+          } else if (shotPocketed.queen) {
+            returnPieceToBoard('queen', false);
+            const wasEligibleForQueen = (myPocketedTotalBefore > 0 || hadRecoveredDue[myTeam]) && duesPending[myTeam] <= 1;
+            if (myPocketedThisShot > 0) {
+              // ICF Law 89: Queen + own C/m + Striker -> all returned + 1 Due, turn continues!
+              nextPlayer = currentPlayer;
+              msg = `Law 89: ${actorName} pocketed Queen, own coin & striker — returned with 1 Due, turn continues!`;
+            } else if (wasEligibleForQueen && oppPocketedThisShot === 0) {
+              // ICF Law 90: Queen + Striker (when eligible) -> Queen returned + 1 Due, turn continues!
+              nextPlayer = currentPlayer;
+              msg = `Law 90: ${actorName} pocketed Queen & striker — Queen returned with 1 Due, turn continues!`;
+            } else {
+              // ICF Law 85: Queen + Striker when all 9 C/m on board -> Queen returned + 1 Due, lose turn
+              nextPlayer = nextSeat;
+              msg = `Law 85: Queen & striker pocketed with all 9 coins on board — ${getActorName(nextPlayer)}'s turn.`;
+            }
+          } else if (myPocketedThisShot > 0) {
+            // ICF Laws 58 & 60: Striker + own C/m (with or without opponent C/m) -> own C/m + 1 Due returned, turn continues!
+            nextPlayer = currentPlayer;
+            msg = `${actorName} pocketed striker + own coin (Law ${oppPocketedThisShot > 0 ? '60' : '58'}): returned with 1 Due, turn continues!`;
+          } else {
+            // ICF Laws 56 & 59: Striker alone or Striker + opponent C/m -> 1 Due, lose turn
+            nextPlayer = nextSeat;
+            msg = `Due (Law ${oppPocketedThisShot > 0 ? '59' : '56'})! ${actorName} pocketed the striker. ${getActorName(nextPlayer)}'s turn.`;
+          }
         } else {
+          // --- Proper Stroke (No Striker Pocketed) ---
+          const hadUnrecoveredDueBeforeStroke = duesPending[myTeam] > 0;
           if (myPocketedThisShot > 0 && duesPending[myTeam] > 0) {
             checkDueFor = { offender: myTeam, beneficiary: oppTeam };
           }
-          for (let i = 0; i < myPocketedThisShot; i++) pocketedTrays[myTeam].push(myColor);
-          for (let i = 0; i < oppPocketedThisShot; i++) pocketedTrays[oppTeam].push(oppColor);
 
-          if (queenPendingPlayer === myTeam) {
-            if (myPocketedThisShot > 0 && oppPocketedThisShot === 0) {
-              queenOwner = myTeam; queenPendingPlayer = null;
-              pocketedTrays[myTeam].push('queen');
+          if (wasCoveringQueen) {
+            if (myPocketedThisShot > 0) {
+              // ICF Law 28 & 87: Pocketing own C/m covers the Queen (even if an opponent C/m also went in)
+              queenOwner = myTeam;
+              queenPendingPlayer = null;
               addPopup(CENTER, CENTER, 'QUEEN COVERED!', '#fb7185');
               msg = `Queen covered by ${actorName}! Shoot again.`;
             } else {
-              returnPieceToBoard('queen', false); queenPendingPlayer = null;
+              returnPieceToBoard('queen', false);
+              queenPendingPlayer = null;
               nextPlayer = nextSeat;
-              msg = `Queen not covered — returned to center. ${getActorName(nextPlayer)}'s turn.`;
+              msg = `Queen not covered (Law 86) — returned to center. ${getActorName(nextPlayer)}'s turn.`;
             }
           } else if (shotPocketed.queen) {
-            if (myPocketedTotalBefore === 0 && myPocketedThisShot === 0) {
-              returnPieceToBoard('queen', false); nextPlayer = nextSeat;
-              msg = `Queen pocketed before any own coin — returned to center. ${getActorName(nextPlayer)}'s turn.`;
-            } else if (myPocketedTotalBefore === 0 && myPocketedThisShot === 1) {
+            const hadPrerequisite = myPocketedTotalBefore > 0 || hadRecoveredDue[myTeam];
+            if (hadUnrecoveredDueBeforeStroke && myPocketedTotalBefore === 0) {
+              // ICF Law 83: Pocketing Queen while a Due is pending against the player
+              returnPieceToBoard('queen', false);
+              nextPlayer = nextSeat;
+              msg = `Law 83: Queen pocketed while a Due was pending — Queen returned & ${getActorName(nextPlayer)}'s turn.`;
+            } else if (!hadPrerequisite && myPocketedThisShot === 0) {
+              // ICF Law 82: Queen pocketed before any own C/m is pocketed
+              returnPieceToBoard('queen', false);
+              nextPlayer = nextSeat;
+              msg = `Law 82: Queen pocketed before any own coin — returned to center. ${getActorName(nextPlayer)}'s turn.`;
+            } else if (!hadPrerequisite && myPocketedThisShot === 1) {
+              // ICF Law 88: All 9 C/m on board, Queen + 1 own C/m pocketed together -> Queen must be covered next stroke
               queenPendingPlayer = myTeam;
-              msg = `${actorName} pocketed the Queen! Sink another ${myColor} coin next to cover it.`;
-            } else if (myPocketedThisShot > 0 && oppPocketedThisShot === 0) {
-              queenOwner = myTeam; pocketedTrays[myTeam].push('queen');
+              msg = `Law 88: ${actorName} pocketed Queen + 1st coin! Sink another ${myColor} coin next to cover it.`;
+            } else if ((!hadPrerequisite && myPocketedThisShot >= 2) || (hadPrerequisite && myPocketedThisShot >= 1)) {
+              // ICF Law 87 & 88: Queen + 2+ own C/m from 9 on board, or Queen + 1+ own C/m when already eligible -> covered!
+              queenOwner = myTeam;
               addPopup(CENTER, CENTER, 'QUEEN COVERED!', '#fb7185');
               msg = `${actorName} pocketed & covered the Queen! Shoot again.`;
-            } else if (oppPocketedThisShot > 0) {
-              returnPieceToBoard('queen', false); nextPlayer = nextSeat;
-              msg = `Opponent's coin pocketed — Queen returned & turn passes to ${getActorName(nextPlayer)}.`;
             } else {
               queenPendingPlayer = myTeam;
               msg = `${actorName} pocketed the Queen! Sink a ${myColor} coin next to cover it.`;
             }
+          } else if (myPocketedThisShot > 0) {
+            // ICF Law 28: As long as player pockets own C/m, turn continues (even if opponent C/m also went in)
+            msg = `Nice shot! ${actorName} keeps the turn.`;
           } else if (oppPocketedThisShot > 0) {
             nextPlayer = nextSeat;
             msg = `Opponent's coin pocketed — turn passes to ${getActorName(nextPlayer)}.`;
-          } else if (myPocketedThisShot > 0) {
-            msg = `Nice shot! ${actorName} keeps the turn.`;
           } else {
             nextPlayer = nextSeat;
             msg = `${getActorName(nextPlayer)}'s turn (${getPlayerColor(nextPlayer) === 'white' ? 'White' : 'Black'}).`;
           }
         }
 
+        // --- Check End-of-Board Laws 93–97 (After Proper Stroke / Post-Return) ---
         const t1Left = pieces.filter((p) => p.type === getPlayerColor(1) && !p.pocketed).length;
         const t2Left = pieces.filter((p) => p.type === getPlayerColor(2) && !p.pocketed).length;
         const queenOnBoard = pieces.some((p) => p.type === 'queen' && !p.pocketed);
 
         if (t1Left === 0 && t2Left === 0) {
-          if (queenOnBoard) finishBoard(oppTeam, `Both last coins cleared while Queen was on board!`, 3);
-          else {
+          if (queenOnBoard || queenPendingPlayer) {
+            const pts = oppPreScore >= 22 ? 1 : 3;
+            finishBoard(oppTeam, `Both last coins cleared while Queen was unsettled (Law 95)!`, null, pts);
+          } else if (queenOwner === myTeam) {
+            const pts = myPreScore >= 22 ? 1 : 3;
+            finishBoard(myTeam, `${getTeamName(myTeam)} cleared both last coins with covered Queen (Law 93/94)!`, null, pts);
+          } else {
             const wTeam = queenOwner === 2 ? 2 : 1;
-            finishBoard(wTeam, `${getTeamName(wTeam)} wins the board!`);
+            const wScore = points[wTeam === 1 ? 'p1' : 'p2'];
+            const pts = wScore >= 22 ? 1 : 3;
+            finishBoard(wTeam, `${getTeamName(wTeam)} wins the board!`, null, pts);
           }
           return;
         }
         if (t1Left === 0) {
           if (myTeam === 2) {
-            // ICF Law: Shooter (Team 2) pocketed opponent's (Team 1) last coin -> Team 2 loses if Queen is on board!
             if (queenOnBoard || queenPendingPlayer) {
-              const qPts = points.p1 >= 22 ? 0 : 3;
-              finishBoard(1, `${getTeamName(2)} pocketed ${getTeamName(1)}'s last coin while Queen was unsettled!`, qPts);
+              const pts = Math.min(12, t2Left + (points.p1 >= 22 ? 0 : 3));
+              finishBoard(1, `${getTeamName(2)} pocketed ${getTeamName(1)}'s last coin while Queen was on board (Law 96)!`, null, pts);
             } else {
-              finishBoard(1, `${getTeamName(2)} pocketed ${getTeamName(1)}'s last coin!`);
+              const pts = Math.min(12, t2Left + (queenOwner === 1 && points.p1 < 22 ? 3 : 0));
+              finishBoard(1, `${getTeamName(2)} pocketed ${getTeamName(1)}'s last coin!`, null, pts);
             }
           } else {
-            if (queenOnBoard || queenPendingPlayer === 1) finishBoard(2, `${getTeamName(1)} cleared last coin while Queen was on board!`, 3);
-            else finishBoard(1, `${getTeamName(1)} cleared all ${getPlayerColor(1)} coins!`);
+            if (queenOnBoard || queenPendingPlayer === 1) {
+              const pts = points.p2 >= 22 ? 1 : 3;
+              finishBoard(2, `${getTeamName(1)} cleared last coin while Queen was on board (Law 97)!`, null, pts);
+            } else {
+              finishBoard(1, `${getTeamName(1)} cleared all ${getPlayerColor(1)} coins!`);
+            }
           }
           return;
         }
         if (t2Left === 0) {
           if (myTeam === 1) {
             if (queenOnBoard || queenPendingPlayer) {
-              const qPts = points.p2 >= 22 ? 0 : 3;
-              finishBoard(2, `${getTeamName(1)} pocketed ${getTeamName(2)}'s last coin while Queen was unsettled!`, qPts);
+              const pts = Math.min(12, t1Left + (points.p2 >= 22 ? 0 : 3));
+              finishBoard(2, `${getTeamName(1)} pocketed ${getTeamName(2)}'s last coin while Queen was on board (Law 96)!`, null, pts);
             } else {
-              finishBoard(2, `${getTeamName(1)} pocketed ${getTeamName(2)}'s last coin!`);
+              const pts = Math.min(12, t1Left + (queenOwner === 2 && points.p2 < 22 ? 3 : 0));
+              finishBoard(2, `${getTeamName(1)} pocketed ${getTeamName(2)}'s last coin!`, null, pts);
             }
           } else {
-            if (queenOnBoard || queenPendingPlayer === 2) finishBoard(1, `${getTeamName(2)} cleared last coin while Queen was on board!`, 3);
-            else finishBoard(2, `${getTeamName(2)} cleared all ${getPlayerColor(2)} coins!`);
+            if (queenOnBoard || queenPendingPlayer === 2) {
+              const pts = points.p1 >= 22 ? 1 : 3;
+              finishBoard(1, `${getTeamName(2)} cleared last coin while Queen was on board (Law 97)!`, null, pts);
+            } else {
+              finishBoard(2, `${getTeamName(2)} cleared all ${getPlayerColor(2)} coins!`);
+            }
           }
           return;
         }
@@ -2123,6 +2755,12 @@
           if (p.pocketed || p.dropping) continue;
           p.prevX = p.x; p.prevY = p.y;
           p.x += p.vx * dt; p.y += p.vy * dt;
+          if (p === striker && !strikerLeftBaseline) {
+            const coord = (gameMode === '4p' && (currentPlayer === 2 || currentPlayer === 4)) ? p.x : p.y;
+            if (Math.abs(coord - shotStartBaselineCoord) > 12 + STRIKER_R) {
+              strikerLeftBaseline = true;
+            }
+          }
 
           if (p.x - p.r < PLAY_MIN) {
             p.x = PLAY_MIN + p.r; p.vx = Math.abs(p.vx) * 0.84;
@@ -2230,12 +2868,17 @@
       }
 
       function drawBoard() {
-        const cacheKey = `${currentTheme}|${currentPlayer}|${gameMode}|${boardOver}|${matchOver}|${Boolean(duePlacement)}`;
+        const cacheKey = `${currentTheme}|${currentPlayer}|${gameMode}|${boardOver}|${matchOver}|${Boolean(duePlacement)}|${boardCacheCanvas.width}`;
         if (cacheKey !== lastBoardCacheKey) {
           lastBoardCacheKey = cacheKey;
+          const scale = boardCacheCanvas.width / BOARD_SIZE;
+          bctx.setTransform(scale, 0, 0, scale, 0, 0);
           renderStaticBoardTo(bctx);
         }
-        ctx.drawImage(boardCacheCanvas, 0, 0, BOARD_SIZE, BOARD_SIZE);
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(boardCacheCanvas, 0, 0);
+        ctx.restore();
       }
 
       function renderStaticBoardTo(tctx) {
@@ -2247,6 +2890,24 @@
         frameGrad.addColorStop(1, theme.frameMid);
         tctx.fillStyle = frameGrad;
         tctx.fillRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+
+        // Directional hardwood grain on frame rails
+        const fPat = getFramePattern(currentTheme);
+        if (fPat) {
+          tctx.save();
+          tctx.fillStyle = fPat;
+          // Top & bottom rails (horizontal grain)
+          tctx.fillRect(0, 0, BOARD_SIZE, FRAME);
+          tctx.fillRect(0, BOARD_SIZE - FRAME, BOARD_SIZE, FRAME);
+          // Left & right rails (rotated 90deg vertical grain)
+          tctx.save();
+          tctx.translate(BOARD_SIZE, 0);
+          tctx.rotate(Math.PI / 2);
+          tctx.fillRect(FRAME, 0, PLAY_SIZE, FRAME);
+          tctx.fillRect(FRAME, BOARD_SIZE - FRAME, PLAY_SIZE, FRAME);
+          tctx.restore();
+          tctx.restore();
+        }
 
         tctx.strokeStyle = theme.bevelDark;
         tctx.lineWidth = 2;
@@ -2375,56 +3036,83 @@
         tctx.restore();
       }
 
-      function drawPiece(p, alpha = 1) {
+      function drawPiece(p) {
         if (!p || (p.pocketed && !p.dropping)) return;
         const palette = p.type === 'striker' ? STRIKER_THEMES[currentStrikerTheme] : PIECE_THEMES[currentPieceTheme][p.type];
-        const rx = isMoving ? p.prevX + (p.x - p.prevX) * alpha : p.x;
-        const ry = isMoving ? p.prevY + (p.y - p.prevY) * alpha : p.y;
+        const rx = p.x;
+        const ry = p.y;
         const rr = p.r * (p.dropping ? p.dropScale : 1);
         if (rr <= 0.5) return;
 
-        ctx.save();
+        const isBlocked = (p === striker && strikerBlocked && !isMoving);
         if (p.dropping) ctx.globalAlpha = Math.max(0.2, p.dropScale);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
-        ctx.beginPath(); ctx.arc(rx + 2.5 * (rr / p.r), ry + 3.5 * (rr / p.r), rr, 0, Math.PI * 2); ctx.fill();
 
-        const grad = ctx.createRadialGradient(rx - rr * 0.32, ry - rr * 0.32, rr * 0.1, rx, ry, rr);
-        if (p === striker && strikerBlocked) {
-          grad.addColorStop(0, '#fca5a5'); grad.addColorStop(0.6, '#ef4444'); grad.addColorStop(1, '#991b1b');
-        } else {
-          grad.addColorStop(0, palette.light); grad.addColorStop(0.65, palette.mid); grad.addColorStop(1, palette.dark);
-        }
+        // Soft drop shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+        ctx.beginPath();
+        ctx.arc(rx + 2.2 * (rr / p.r), ry + 3.2 * (rr / p.r), rr, 0, Math.PI * 2);
+        ctx.fill();
 
-        ctx.fillStyle = grad;
-        ctx.strokeStyle = p === striker && strikerBlocked ? '#7f1d1d' : palette.stroke;
+        // Outer beveled base rim
+        ctx.fillStyle = isBlocked ? '#991b1b' : palette.dark;
+        ctx.strokeStyle = isBlocked ? '#7f1d1d' : palette.stroke;
         ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.arc(rx, ry, rr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(rx, ry, rr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-        ctx.strokeStyle = palette.ring; ctx.lineWidth = 1.3;
-        ctx.beginPath(); ctx.arc(rx, ry, rr * 0.68, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(rx, ry, rr * 0.36, 0, Math.PI * 2); ctx.stroke();
+        // Mid-tone 3D lathe body
+        ctx.fillStyle = isBlocked ? '#ef4444' : palette.mid;
+        ctx.beginPath();
+        ctx.arc(rx - rr * 0.06, ry - rr * 0.06, rr * 0.88, 0, Math.PI * 2);
+        ctx.fill();
 
-        if (p.type === 'striker' && !strikerBlocked) {
-          ctx.strokeStyle = palette.ring; ctx.lineWidth = 1.1;
-          for (let k = 0; k < 4; k++) {
-            const a = (k * Math.PI) / 2;
-            ctx.beginPath();
-            ctx.moveTo(rx + Math.cos(a) * 3, ry + Math.sin(a) * 3);
-            ctx.lineTo(rx + Math.cos(a) * (rr * 0.58), ry + Math.sin(a) * (rr * 0.58));
-            ctx.stroke();
-          }
-        }
-        if (palette.glossy || p.type === 'striker') {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+        // Upper-left crown highlight
+        ctx.fillStyle = isBlocked ? '#fca5a5' : palette.light;
+        ctx.beginPath();
+        ctx.arc(rx - rr * 0.16, ry - rr * 0.16, rr * 0.52, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Turned concentric grooves
+        ctx.strokeStyle = palette.ring;
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.arc(rx, ry, rr * 0.68, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(rx, ry, rr * 0.36, 0, Math.PI * 2);
+        ctx.stroke();
+
+        if (p.type === 'striker' && !isBlocked) {
+          ctx.lineWidth = 1.1;
           ctx.beginPath();
-          ctx.ellipse(rx - rr * 0.28, ry - rr * 0.28, rr * 0.32, rr * 0.18, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.moveTo(rx + 3, ry); ctx.lineTo(rx + rr * 0.58, ry);
+          ctx.moveTo(rx - 3, ry); ctx.lineTo(rx - rr * 0.58, ry);
+          ctx.moveTo(rx, ry + 3); ctx.lineTo(rx, ry + rr * 0.58);
+          ctx.moveTo(rx, ry - 3); ctx.lineTo(rx, ry - rr * 0.58);
+          ctx.stroke();
+        }
+
+        if (palette.glossy || p.type === 'striker') {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.beginPath();
+          ctx.arc(rx - rr * 0.26, ry - rr * 0.26, rr * 0.2, 0, Math.PI * 2);
           ctx.fill();
         }
-        if (p === striker && strikerBlocked && !isMoving) {
-          ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3; ctx.setLineDash([5, 4]);
-          ctx.beginPath(); ctx.arc(rx, ry, rr + 7, 0, Math.PI * 2); ctx.stroke();
+
+        if (isBlocked) {
+          ctx.save();
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.arc(rx, ry, rr + 7, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
         }
-        ctx.restore();
+
+        if (p.dropping) ctx.globalAlpha = 1;
       }
 
       function drawEffects() {
@@ -2473,42 +3161,106 @@
         ctx.restore();
       }
 
-      function draw(alpha = 1) {
+      function drawDuePreview() {
+        if (!duePlacement) return;
+        const valid = isValidDueSpot(duePreviewPos.x, duePreviewPos.y);
+        const palette = PIECE_THEMES[currentPieceTheme][duePlacement.color];
+        const x = duePreviewPos.x;
+        const y = duePreviewPos.y;
+
+        ctx.save();
+        // Outer validity halo
+        ctx.strokeStyle = valid ? '#10b981' : '#ef4444';
+        ctx.fillStyle = valid ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.22)';
+        ctx.lineWidth = 3;
+        if (!valid) ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(x, y, COIN_R + 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Ghost coin body (zero gradient allocation)
+        ctx.globalAlpha = 0.88;
+        ctx.fillStyle = palette.mid;
+        ctx.strokeStyle = valid ? '#10b981' : '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, COIN_R, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = palette.light;
+        ctx.beginPath();
+        ctx.arc(x - COIN_R * 0.16, y - COIN_R * 0.16, COIN_R * 0.52, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Precision alignment crosshair
+        ctx.strokeStyle = valid ? 'rgba(255,255,255,0.75)' : 'rgba(254,202,202,0.85)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y);
+        ctx.moveTo(x, y - 7); ctx.lineTo(x, y + 7);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function draw() {
         drawBoard();
         for (const p of pieces) {
-          if (p !== striker) drawPiece(p, alpha);
+          if (p !== striker) drawPiece(p);
         }
         drawAimGuide();
-        if (striker && !boardOver && !matchOver && !duePlacement) drawPiece(striker, alpha);
+        if (duePlacement) drawDuePreview();
+        if (striker && !boardOver && !matchOver && !duePlacement) drawPiece(striker);
         drawEffects();
       }
+
+      let smoothedDt = 1 / 60;
 
       function loop(timestamp) {
         animId = requestAnimationFrame(loop);
         if (!lastFrameTime) lastFrameTime = timestamp;
-        let frameDt = Math.min((timestamp - lastFrameTime) / 1000, 0.05);
-        for (const hz of [60, 90, 120, 144, 240]) {
-          const target = 1 / hz;
-          if (Math.abs(frameDt - target) < 0.002) { frameDt = target; break; }
-        }
+        const rawDt = Math.min(Math.max((timestamp - lastFrameTime) / 1000, 0.004), 0.035);
         lastFrameTime = timestamp;
+        smoothedDt = smoothedDt * 0.8 + rawDt * 0.2;
+
+        let activeFrame = needsRedraw || isAiming || kbAiming;
 
         if (isMoving) {
-          physicsAccumulator += frameDt;
-          let steps = 0;
-          while (physicsAccumulator >= FIXED_DT && steps < 16) {
-            stepPhysicsFixed(FIXED_DT);
-            physicsAccumulator -= FIXED_DT;
-            steps++;
+          activeFrame = true;
+          const subSteps = 4;
+          const subDt = smoothedDt / subSteps;
+          for (let s = 0; s < subSteps && isMoving; s++) {
+            stepPhysicsFixed(subDt);
           }
-          if (!isMoving) physicsAccumulator = 0;
-        } else {
-          physicsAccumulator = 0;
         }
 
-        if (popups.length || ripples.length) stepEffects(frameDt);
-        const alpha = isMoving ? physicsAccumulator / FIXED_DT : 1;
-        draw(alpha);
+        if (duePlacement && (Math.abs(joyVec.x) > 0.04 || Math.abs(joyVec.y) > 0.04)) {
+          activeFrame = true;
+          const speed = 95;
+          let nx = duePreviewPos.x + joyVec.x * speed * smoothedDt;
+          let ny = duePreviewPos.y + joyVec.y * speed * smoothedDt;
+          const dx = nx - CENTER;
+          const dy = ny - CENTER;
+          const dist = Math.hypot(dx, dy);
+          const maxR = OUTER_CIRCLE_R - COIN_R;
+          if (dist > maxR && dist > 0) {
+            nx = CENTER + (dx / dist) * maxR;
+            ny = CENTER + (dy / dist) * maxR;
+          }
+          duePreviewPos = { x: nx, y: ny };
+          updateConfirmDueBtnStyle(isValidDueSpot(nx, ny));
+        }
+
+        if (popups.length || ripples.length) {
+          activeFrame = true;
+          stepEffects(smoothedDt);
+        }
+
+        if (activeFrame) {
+          needsRedraw = false;
+          draw();
+        }
       }
 
       window.addEventListener('resize', resizeCanvas);
@@ -2516,9 +3268,6 @@
         new ResizeObserver(() => { if (striker) resizeCanvas(); }).observe(boardWrap);
       }
       window.onload = () => {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
         if (animId) cancelAnimationFrame(animId);
         loadPrefs();
         startNewMatch();
