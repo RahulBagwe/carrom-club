@@ -35,32 +35,33 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-5">
-  <div class="w-full max-w-[540px] flex flex-col items-center gap-3">
+<body class="min-h-[100dvh] overflow-x-hidden flex flex-col items-center justify-start sm:justify-center p-2.5 sm:p-5">
+  <div class="w-full max-w-[540px] flex flex-col items-center gap-2 sm:gap-3">
     <!-- Decluttered Symmetrical Top Bar -->
-    <header class="w-full flex items-center justify-between gap-2 px-1">
-      <div class="flex items-center gap-2.5 min-w-0">
+    <header class="w-full flex flex-wrap items-center justify-between gap-2 px-0.5">
+      <div class="flex items-center gap-2 min-w-0">
         <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md shadow-amber-900/40 shrink-0">
           <span class="w-3.5 h-3.5 rounded-full bg-rose-600 border-2 border-amber-100 block"></span>
         </div>
         <div class="min-w-0">
-          <h1 class="text-base sm:text-lg font-bold tracking-tight text-amber-50 truncate">Carrom Club</h1>
-          <p id="matchMeta" class="text-[11px] text-stone-400 truncate">ICF Official · Game 1/3 · Board 1/8</p>
+          <h1 class="text-sm sm:text-lg font-bold tracking-tight text-amber-50 truncate">Carrom Club</h1>
+          <p id="matchMeta" class="text-[10px] sm:text-[11px] text-stone-400 truncate">ICF Official · Game 1/3 · Board 1/8</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button id="playMenuBtn" type="button" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-800/90 hover:bg-stone-700 border border-amber-500/40 text-amber-200 transition">
+      <div class="flex flex-wrap items-center justify-end gap-1.5">
+        <button id="playMenuBtn" type="button" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-800/90 hover:bg-stone-700 border border-amber-500/40 text-amber-200 transition">
           Play
         </button>
-        <button id="studioBtn" type="button" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-800/90 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
+        <button id="studioBtn" type="button" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-stone-800/90 hover:bg-stone-700 border border-stone-700 text-stone-200 transition">
           Themes
         </button>
         <button id="rulesBtn" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-stone-800/90 hover:bg-stone-700 border border-stone-700 text-stone-300 transition">
           Rules
         </button>
-        <button id="soundBtn" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-stone-800/90 hover:bg-stone-700 border border-stone-700 text-stone-300 transition">
-          Sound: On
+        <button id="soundBtn" type="button" aria-label="Toggle sound" title="Sound: On" class="p-1.5 rounded-xl bg-stone-800/90 hover:bg-stone-700 border border-stone-700 text-amber-300 transition flex items-center justify-center">
+          <svg id="soundIconOn" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          <svg id="soundIconOff" class="w-4 h-4 hidden text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
         </button>
         <button id="resetBtn" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition">
           Reset Rack
@@ -111,7 +112,7 @@
     </div>
 
     <!-- Board Container -->
-    <div id="boardWrap" class="w-full aspect-square rounded-2xl shadow-2xl overflow-hidden bg-stone-950 border border-stone-800 flex items-center justify-center">
+    <div id="boardWrap" class="w-full max-w-[min(540px,56dvh)] sm:max-w-[min(540px,62dvh)] aspect-square rounded-2xl shadow-2xl overflow-hidden bg-stone-950 border border-stone-800 flex items-center justify-center">
       <canvas id="carromCanvas" class="w-full h-full block"></canvas>
     </div>
 
@@ -274,6 +275,8 @@
       const strikerSlider = document.getElementById('strikerSlider');
       const resetBtn = document.getElementById('resetBtn');
       const soundBtn = document.getElementById('soundBtn');
+      const soundIconOn = document.getElementById('soundIconOn');
+      const soundIconOff = document.getElementById('soundIconOff');
       const playMenuBtn = document.getElementById('playMenuBtn');
       const playModal = document.getElementById('playModal');
       const closePlayBtn = document.getElementById('closePlayBtn');
@@ -890,15 +893,40 @@
         ripples.push({ x, y, color, r: 6, maxR, life: 1.0 });
       }
 
+      let noiseBuffer = null;
       function ensureAudio() {
         if (!soundEnabled) return null;
         if (!audioCtx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (AudioCtx) audioCtx = new AudioCtx();
         }
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        if (!audioCtx) return null;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        if (!noiseBuffer) {
+          const len = Math.floor(audioCtx.sampleRate * 0.04);
+          noiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+          const data = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.3));
+        }
         return audioCtx;
       }
+
+      function unlockAudioOnce() {
+        const ac = ensureAudio();
+        if (!ac) return;
+        try {
+          const buf = ac.createBuffer(1, 1, 22050);
+          const src = ac.createBufferSource();
+          src.buffer = buf;
+          src.connect(ac.destination);
+          src.start(0);
+        } catch (_) {}
+      }
+      ['touchstart', 'pointerdown', 'mousedown', 'keydown'].forEach((evt) => {
+        window.addEventListener(evt, unlockAudioOnce, { once: true, passive: true });
+      });
 
       function playClack(intensity = 0.5) {
         const ac = ensureAudio();
@@ -906,34 +934,55 @@
         const now = performance.now();
         if (now - lastClackTime < 18) return;
         lastClackTime = now;
-        const vol = Math.min(0.45, Math.max(0.04, intensity * 0.35));
+        const t = ac.currentTime;
+        const vol = Math.min(0.85, Math.max(0.22, intensity * 0.75));
+
+        // Crisp wooden snap (filtered noise burst)
+        if (noiseBuffer) {
+          const src = ac.createBufferSource();
+          src.buffer = noiseBuffer;
+          const filter = ac.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1600 + intensity * 600, t);
+          filter.Q.setValueAtTime(2.2, t);
+          const ng = ac.createGain();
+          ng.gain.setValueAtTime(vol * 0.9, t);
+          ng.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+          src.connect(filter);
+          filter.connect(ng);
+          ng.connect(ac.destination);
+          src.start(t);
+        }
+
+        // Warm wooden body tap
         const osc = ac.createOscillator();
         const gain = ac.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(320 + intensity * 260, ac.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(110, ac.currentTime + 0.055);
-        gain.gain.setValueAtTime(vol, ac.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.06);
+        osc.frequency.setValueAtTime(880 + intensity * 320, t);
+        osc.frequency.exponentialRampToValueAtTime(240, t + 0.06);
+        gain.gain.setValueAtTime(vol * 0.75, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
         osc.connect(gain);
         gain.connect(ac.destination);
-        osc.start();
-        osc.stop(ac.currentTime + 0.065);
+        osc.start(t);
+        osc.stop(t + 0.07);
       }
 
       function playPocketSound(isQueen = false) {
         const ac = ensureAudio();
         if (!ac || !soundEnabled) return;
+        const t = ac.currentTime;
         const osc = ac.createOscillator();
         const gain = ac.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(isQueen ? 440 : 220, ac.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(isQueen ? 660 : 75, ac.currentTime + 0.16);
-        gain.gain.setValueAtTime(0.32, ac.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.18);
+        osc.frequency.setValueAtTime(isQueen ? 620 : 480, t);
+        osc.frequency.exponentialRampToValueAtTime(isQueen ? 880 : 140, t + 0.16);
+        gain.gain.setValueAtTime(0.65, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
         osc.connect(gain);
         gain.connect(ac.destination);
-        osc.start();
-        osc.stop(ac.currentTime + 0.19);
+        osc.start(t);
+        osc.stop(t + 0.19);
       }
 
       function createPiece(x, y, type) {
@@ -1643,8 +1692,13 @@
 
       soundBtn.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
-        soundBtn.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
-        if (soundEnabled) ensureAudio();
+        soundIconOn.classList.toggle('hidden', !soundEnabled);
+        soundIconOff.classList.toggle('hidden', soundEnabled);
+        soundBtn.title = soundEnabled ? 'Sound: On' : 'Sound: Off';
+        if (soundEnabled) {
+          unlockAudioOnce();
+          playClack(0.4);
+        }
       });
       rulesetBtn.addEventListener('click', () => {
         ensureAudio();
