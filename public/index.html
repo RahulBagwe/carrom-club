@@ -461,7 +461,7 @@
       const KINETIC_FRICTION = 240;
       const STOP_SPEED = 10;
       const MAX_PULL = 145;
-      const SHOT_POWER = 8.5;
+      const SHOT_POWER = 15.0;
 
       const THEMES = {
         wood: {
@@ -952,7 +952,7 @@
 
       let kbAiming = false;
       let kbAngle = -Math.PI / 2;
-      let kbPower = 95;
+      let kbPower = 65;
       let wins = { p1: 0, p2: 0 };
 
       function loadPrefs() {
@@ -1801,7 +1801,7 @@
 
               if (score > bestScore) {
                 bestScore = score;
-                const power = Math.min(MAX_PULL, Math.max(75, (shotDist + distToPk) * 0.24));
+                const power = Math.min(MAX_PULL, Math.max(45, (shotDist + distToPk) * 0.145));
                 bestShot = { sx: clear.x, t: clear.t, nx: sxu, ny: syu, power };
               }
             }
